@@ -1,0 +1,29 @@
+wandb/
+
+# wandb/debug-internal.log
+# wandb/debug.log
+# wandb/latest-run
+# wandb/debug-internal.log
+# wandb/debug.log
+# wandb/latest-run
+# *.pt
+*.zip
+# FMG_project.zip
+Rotem_model/wandb/
+.conda/
+.vscode/
+.vscode/settings.json
+*.mp4
+*.pdf
+*.txt
+*.pyc
+*.cpython-311.pyc
+.vscode/
+.conda/
+.idea/
+
+arcive/
+Rotem_model/results/
+Rotem_model/models/saved_models/
+Rotem_model/data/archive/
+Rotem_model/data/full_muvment_clean/
