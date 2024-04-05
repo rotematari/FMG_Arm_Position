@@ -98,8 +98,8 @@ def main():
         config.num_labels = len(data_processor.label_index)
 
     if config.plot_data:
-        data_processor.plot(from_indx=0, to_indx=50000)
-
+        data_processor.plot(from_indx=100000, to_indx=105000)
+    
     if config.pre_trained:
         check_point = torch.load(config.best_model)
         # config = check_point['config']

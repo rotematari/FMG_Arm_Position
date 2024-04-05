@@ -2,7 +2,7 @@ import torch
 from data.data_processing import DataProcessor
 from sklearn.preprocessing import StandardScaler
 import numpy as np 
-from models.models import CNNLSTMModel
+from models.models import CNNLSTMModel,Conv2DLSTMAttentionModel
 from scipy.signal import convolve2d
 import serial
 import matplotlib.pyplot as plt
@@ -19,9 +19,6 @@ class RealTimeSystem:
         
         # NatNet 
         self.natnet_reader = NatNetReader()
-
-
-
 
         # Check if CUDA is available
         if torch.cuda.is_available():
@@ -40,37 +37,41 @@ class RealTimeSystem:
         
         self.model = self.initialize_model()
         self.model.load_state_dict(self.checkpoint['model_state_dict'])
-
-        
-
         self.feature_scaler,self.label_scaler = self.initialize_scaler()
 
         # self.data_processor = DataProcessor(self.config)
-
         # Additional initializations (e.g., visualization tools, data savers) can go here
 
-
-        # calibration_length = 100
-        # print("start clibration \n ---------------- \n")
-
-        # self.calibrate_system(calibration_length=calibration_length)
-        # print("end clibration \n ---------------- \n")
         self.first = True
-        self.testFromFlie = False
+        self.testFromFlie = True
+
         if self.testFromFlie:
             self.testInputs = np.load('inputs.npy')
+            self.testInputsLabes = np.load('inputs_labels.npy',allow_pickle=True)
+            self.testInputs_seq = self.create_sliding_sequences(self.testInputs,self.config.sequence_length)
+            self.testInputs_labels_seq = self.create_sliding_sequences(self.testInputsLabes,self.config.sequence_length)
             self.testIndex = 0
         else:
             self.ser = self.initialize_serial()
+            calibration_length = 1000
+            print("start clibration \n ---------------- \n")
+
+            self.calibrate_system(calibration_length=calibration_length)
+            
+            print("end clibration \n ---------------- \n")
+        
+        self.last_Data_Point = [0 for i in range(32)]
+
     def initialize_model(self):
         # Initialize and return the model
-        return CNNLSTMModel(self.config).to(self.device)
+        return Conv2DLSTMAttentionModel(self.config).to(self.device)
+    
     def initialize_serial(self):
         ser = serial.Serial('/dev/ttyACM0', 115200)
         for i in range(100):
             ser.readline()
-
         return ser 
+    
     def initialize_scaler(self):
         # Initialize and return the model
         label_scaler = StandardScaler()
@@ -93,22 +94,27 @@ class RealTimeSystem:
     def readline(self):
         # reads a line
         try:
-            # print(self.ser.readline().decode("utf-8").rstrip(',\r\n'))
             line = self.ser.readline().decode("utf-8").rstrip(',\r\n') # Read a line from the serial port
             # print(line)
-            DataPoint = [int(num) for num in line.split(',')]
+            DataPoint = [int(num) for num in line.split(',')[:32]]
+
+            if len(DataPoint) < 32:
+                DataPoint = self.last_Data_Point
+                print("bad reading")
+            else:
+                self.last_Data_Point = DataPoint
             # print(len(DataPoint))
-            DataPoint = [DataPoint[i] for i in self.config.sensor_location]
+            # DataPoint = [DataPoint[i] for i in self.config.sensor_location]
 
         except Exception as e:
             print(f'eror in reading sequence : {e}')
-            DataPoint = [0 for i in range(28)]
+            DataPoint = self.last_Data_Point
         
         # print(data)
-        return DataPoint
+        
+        return DataPoint[:32]
     
     def calibrate_system(self,calibration_length):
-        
         # Read calibration data and set up bias and scale parameters
         Caldata = []
         
@@ -122,7 +128,17 @@ class RealTimeSystem:
         
         # Calculate the mean of each column
         self.session_bias = Caldata.mean(axis=0)
+    def create_sliding_sequences(self,input_array, sequence_length):
+        sample_size, features = input_array.shape
+        new_sample_size = sample_size - sequence_length + 1
 
+        sequences = []
+
+        for i in range(new_sample_size):
+            sequence = input_array[i:i+sequence_length]
+            sequences.append(sequence)
+
+        return np.array(sequences)
     def read_seq(self):
 
         window_size = self.config.window_size
@@ -134,21 +150,24 @@ class RealTimeSystem:
                 for i in range(sequence_length):
                     sequence.append(self.readline())
                 self.last_sequence = sequence
+
             else:
                 self.last_sequence = self.last_sequence[1:]
                 self.last_sequence.append(self.readline())
                 sequence = self.last_sequence
             try:
                 #calibrate
-                # sequence = np.array(sequence)- self.session_bias
+                sequence = sequence- self.session_bias
                 # moving averege 
                 sequence = convolve2d(np.array(sequence).T,np.ones((1,window_size))/window_size,'valid').T
                 #scale
                 sequence = self.feature_scaler.transform(sequence)
+                # print(sequence.shape)
             except Exception as e:  
                 print(f'eror in sequence process : {e}') 
+                sequence = np.zeros((200,32))
         else:
-            sequence = self.testInputs[self.testIndex]
+            sequence = self.testInputs_seq[self.testIndex]
             self.testIndex += 1
             # time.sleep(0.01)
 
@@ -164,10 +183,10 @@ class RealTimeSystem:
     def predict(self, sequence):
         self.model.eval()
         with torch.no_grad():
+        
             sequence = torch.tensor(sequence, dtype=torch.float32, device= self.device)
             sequence = sequence.unsqueeze(0)
             try :
-
                 prediction = self.model(sequence)
                 prediction = prediction[:,-1,:]
                 prediction = self.label_scaler.inverse_transform(prediction.detach().cpu().numpy())
@@ -230,7 +249,16 @@ class RealTimeSystem:
             prediction = self.predict(sequence)
 
             try:
-                ground_truth = self.natnet_reader.read_sample()
+                if self.testFromFlie:
+                    ground_truth = {
+                                    'chest':[(0,0,0)],
+                                    'shoulder':[self.testInputs_labels_seq[self.testIndex,-1,0:3]],
+                                    'elbow':[self.testInputs_labels_seq[self.testIndex,-1,3:6]],
+                                    'wrist':[self.testInputs_labels_seq[self.testIndex,-1,6:9]],
+                                    'table_base':[(0,0,0)],
+                                    }
+                else:
+                    ground_truth = self.natnet_reader.read_sample()
             except Exception as e :
                 print(f'eror in natnet{e}')
                 ground_truth = {
@@ -256,7 +284,7 @@ class RealTimeSystem:
 
 if __name__ == "__main__":
 
-    model_check_point = r'models/saved_models/CNN_LSTMModel_no_biased.pt'
+    model_check_point = r'models/saved_models/Conv2DLSTMAttentionModel_good_date_03_04_11_38.pt'
 
     realtime = RealTimeSystem(model_check_point)
     realtime.natnet_reader.natnet.run()

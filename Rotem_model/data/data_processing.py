@@ -35,7 +35,10 @@ class DataProcessor:
             self.feature_scaler = MinMaxScaler(feature_range=(-1,1))
             self.label_scaler = MinMaxScaler(feature_range=(-1,1))
         elif config.norm == 'std':
-            self.feature_scaler = StandardScaler(with_mean=False)
+            if self.config.subtract_bias:
+                self.feature_scaler = StandardScaler(with_mean=False)
+            else:
+                self.feature_scaler = StandardScaler(with_mean=True)
             self.label_scaler =StandardScaler()
 
     def load_data(self,train = True) -> Tensor:
@@ -56,35 +59,41 @@ class DataProcessor:
                 # adds velocities to the labels
                 self.train_data = center_diff(self.config, locations=self.train_data,order=4)
             # subtracts the bias on the FMG sensors data
-            self.train_data[self.config.fmg_index] = subtract_bias(self.train_data[self.config.fmg_index + self.config.session_time_stamp])
-            self.train_data = self.train_data.drop_duplicates().dropna().reset_index(drop=True)
+            if self.config.subtract_bias:
+                self.train_data[self.config.fmg_index] = subtract_bias(self.train_data[self.config.fmg_index + self.config.session_time_stamp])
+                self.train_data = self.train_data.drop_duplicates().dropna().reset_index(drop=True)
 
         # average rolling window
         if self.config.with_velocity:
             self.train_data[self.config.fmg_index + self.config.velocity_label_inedx] = self.train_data[self.config.fmg_index+ self.config.velocity_label_inedx].rolling(window=self.config.window_size).mean()
         else:
-            self.train_data[self.config.fmg_index] = self.train_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
+            # self.train_data[self.config.fmg_index] = self.train_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
+            self.train_data[self.config.fmg_index] = self.train_data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
 
         # normalize
         self.feature_scaler.fit(self.train_data[self.config.fmg_index])
         self.train_data[self.config.fmg_index] = self.feature_scaler.transform(self.train_data[self.config.fmg_index])
         
+        # for i, var in enumerate(self.feature_scaler.var_):
+        #     if var < 50:
+        #         self.train_data.iloc[:,i] = 0
+
         if self.config.norm_labels:
             self.label_scaler.fit(self.train_data[self.label_index])
             self.train_data[self.label_index] = self.label_scaler.transform(self.train_data[self.label_index])
-
         self.train_data = self.train_data.drop_duplicates().dropna().reset_index(drop=True)
         #pre process test
-
         # subtracts the bias on the FMG sensors data
-        self.test_data[self.config.fmg_index] = subtract_bias(self.test_data[self.config.fmg_index + self.config.session_time_stamp])
-        self.test_data = self.test_data.drop_duplicates().dropna().reset_index(drop=True)
+        if self.config.subtract_bias:
+            self.test_data[self.config.fmg_index] = subtract_bias(self.test_data[self.config.fmg_index + self.config.session_time_stamp])
+            self.test_data = self.test_data.drop_duplicates().dropna().reset_index(drop=True)
 
         # average rolling window
         if self.config.with_velocity:
             self.test_data[self.config.fmg_index + self.config.velocity_label_inedx] = self.test_data[self.config.fmg_index+ self.config.velocity_label_inedx].rolling(window=self.config.window_size).mean()
         else:
-            self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
+            # self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
+            self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
         
         # normalize
         self.test_data[self.config.fmg_index] = self.feature_scaler.transform(self.test_data[self.config.fmg_index])
@@ -158,25 +167,29 @@ class DataProcessor:
         return train_loader,test_loader
 
     def plot(self, from_indx=2000, to_indx=1000):
-        fmg_df = self.data[self.config.fmg_index]
-        label_position = self.data[self.config.label_index]
+        fmg_df = self.train_data[self.config.fmg_index]
+        label_position = self.train_data[self.config.label_index]
 
         if self.config.with_velocity:
-            label_velocity = self.data[self.config.velocity_label_index]
+            label_velocity = self.train_data[self.config.velocity_label_index]
 
         # Create a figure and a grid of subplots with 1 row and 2 columns
-        fig, axes = plt.subplots(3, 1, sharex=True, sharey=True)  # Adjust figsize as needed
+        fig, axes = plt.subplots(2, 1, sharex=True, sharey=False)  # Adjust figsize as needed
 
         # Plot data on the second subplot
         axes[0].plot(fmg_df[from_indx:to_indx])
         axes[0].set_title('Plot of FMG')
+        axes[0].set_ylim([-10,10])
 
         axes[1].plot(label_position[from_indx:to_indx])
         axes[1].set_title('Plot of label_position')
+        axes[1].set_ylim([-5,5])
+
 
         if self.config.with_velocity:
             axes[2].plot(label_velocity[from_indx:to_indx])
             axes[2].set_title('Plot of label_velocity')
+
 
         # Adjust layout to prevent overlap
         plt.tight_layout()
