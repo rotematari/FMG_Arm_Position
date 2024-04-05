@@ -1,0 +1,67 @@
+method: bayes
+metric:
+  goal: minimize
+  name: Vall_Loss
+parameters:
+  cuda:
+    values:
+    - 0
+    distribution: categorical 
+  batch_size:
+    distribution: int_uniform
+    max: 100
+    min: 25
+  cnn2d_kernel_size:
+    distribution: categorical
+    values:
+      - 3
+      - 5
+      - 9
+  cnn2dlstm_dropout:
+    distribution: uniform
+    max: 0.5
+    min: 0
+  conv2d_hidden_sizes:
+    distribution: categorical
+    values:
+      - - 8
+        - 8
+        - 8
+      - - 16
+        - 16
+        - 16
+      - - 32
+        - 32
+        - 32
+      - - 32
+        - 64
+        - 32
+  conv2d_n_heads:
+    distribution: categorical
+    values:
+      - 4
+      - 8
+      - 16
+  learning_rate:
+    distribution: uniform
+    max: 0.001
+    min: 1e-06
+  sequence_length:
+    distribution: categorical
+    values:
+      - 16
+      - 32
+      - 64
+      - 128
+  weight_decay:
+    distribution: uniform
+    max: 1e-05
+    min: 1e-08
+  window_size:
+    distribution: categorical
+    values:
+      - 4
+      - 8
+      - 16
+      - 32
+program: Rotem_model/main.py

@@ -16,10 +16,12 @@ from models.PatchTST import Model as PatchTST
 from utils.utils import train, test_model, plot_results,print_model_size, plot_losses
 from pytorch_tcn import TCN
 
-def set_device():
+def set_device(config):
     if torch.cuda.is_available():
-        device = torch.device("cuda:0")
-        print(f"Running on the CUDA device: {torch.cuda.get_device_name(0)}")
+
+        device = torch.device(f"cuda:{config.cuda}")
+        print(f"cuda:{config.cuda}\n")
+        print(f"Running on the CUDA device: {torch.cuda.get_device_name(config.cuda)}")
     else:
         device = torch.device("cpu")
         print("Running on CPU")
@@ -29,7 +31,7 @@ def set_device():
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a neural network.')
     parser.add_argument('--config', type=str, default='config.yaml', help='Path to the configuration file.')
-    parser.add_argument('--label_norm', type=bool, help='if to normalize labels')
+    parser.add_argument('--cuda', type=int, help='0-3 choose cuda to use in zeus')
     parser.add_argument('--n_layer', type=int, help='The number of hidden layers.')
     parser.add_argument('--lstm_hidden_size', type=int, help='The size of each hidden layer.')
     parser.add_argument('--lstm_num_layers', type=int, help='The number of layers.')
@@ -52,6 +54,10 @@ def parse_args():
     parser.add_argument('--stable_lr', type=float, help='Stable learning rate to use after drop_epoch')
     parser.add_argument('--kernelsize_tcn', type=int, help='Kernel size for TCN')
     parser.add_argument('--num_channels', help='List of number of channels (e.g., [28, 28])')
+    parser.add_argument('--cnn2d_kernel_size', type=int, help='Kernel size for 2D CNN.')
+    parser.add_argument('--cnn2dlstm_dropout', type=float, help='Dropout rate for CNN2DLSTM.')
+    parser.add_argument('--conv2d_hidden_sizes', nargs='+', type=int, help='List of hidden sizes for Conv2D.')
+    parser.add_argument('--conv2d_n_heads', type=int, help='Number of heads for Conv2D.')
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
@@ -71,14 +77,15 @@ def main():
     torch.cuda.manual_seed_all(42)  # For multi-GPU setups
     np.random.seed(42)
     random.seed(0)
-
-    device = set_device()
-
     config = parse_args()
+
+    device = set_device(config)
+
+
     run = None
 
     if config.wandb_on:
-        wandb_run = wandb.init(project="FMG_Tune_LSTM", config=config)
+        wandb_run = wandb.init(project="tune_fmg_conv2dlstm", config=config)
         # wandb.config.update(allow_val_change=True)
         
         config = wandb.config

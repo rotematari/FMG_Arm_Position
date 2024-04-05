@@ -26,7 +26,7 @@ label_index: [
        ]
 time_stamp: ['time_stamp']
 
-model: 'PatchTST'
+model: 'Conv2DLSTMAttentionModel'
 
 models_to_train: [
        # 'DecompTransformerModel','PatchTST',
@@ -54,9 +54,9 @@ dropout : 0.0 #0.2770441390826035
 weight_decay : 1.0e-06 # best around 0.00005
 
 window_size : 16
-sequence_length : 16
+sequence_length : 64
 
-num_epochs : 3
+num_epochs : 10
 batch_size : 50
 
 # base_lr : 0.000001  # Minimum learning rate
@@ -122,12 +122,12 @@ num_layers_transformer : 2
 transformer_n_head: 8 
 
 #for PatchTST
-kernel_PatchTST: 16
+kernel_PatchTST: 8
 stride: 2
-patch_len : 8
+patch_len : 4
 n_head_PatchTST : 8
 padding_patch : 'end' # default='end', help='None: None; end: padding on the end'
-encoder_layers : 1
+encoder_layers : 2
 decoder_layers : 1
 d_model: 64
 d_ff: 126 # fullyconnected
@@ -153,7 +153,7 @@ shuffle: False
 
 loss_func : RMSELoss
 
-wandb_on: False
+wandb_on: True
 norm: 'std'
 subtract_bias: True
 norm_labels: True
