@@ -26,7 +26,7 @@ label_index: [
        ]
 time_stamp: ['time_stamp']
 
-model: 'Conv2DLSTMAttentionModel'
+model: 'PatchTST'
 
 models_to_train: [
        # 'DecompTransformerModel','PatchTST',
@@ -122,9 +122,9 @@ num_layers_transformer : 2
 transformer_n_head: 8 
 
 #for PatchTST
-kernel_PatchTST: 25
+kernel_PatchTST: 16
 stride: 2
-patch_len : 16
+patch_len : 8
 n_head_PatchTST : 8
 padding_patch : 'end' # default='end', help='None: None; end: padding on the end'
 encoder_layers : 1

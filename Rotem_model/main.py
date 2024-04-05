@@ -29,7 +29,7 @@ def set_device():
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a neural network.')
     parser.add_argument('--config', type=str, default='config.yaml', help='Path to the configuration file.')
-    # parser.add_argument('--label_norm', type=bool, help='if to normalize labels')
+    parser.add_argument('--label_norm', type=bool, help='if to normalize labels')
     parser.add_argument('--n_layer', type=int, help='The number of hidden layers.')
     parser.add_argument('--lstm_hidden_size', type=int, help='The size of each hidden layer.')
     parser.add_argument('--lstm_num_layers', type=int, help='The number of layers.')
