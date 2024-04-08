@@ -99,7 +99,6 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
 
     train_losses = []
     val_losses = []
-    best_val_loss = 0
     best_wrist_error = 5
 
     print("training starts")
@@ -133,7 +132,7 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             #     else:
 
             #         outputs = model(inputs,time_feature)
-                
+
             # else :
             outputs = model(inputs)
             
@@ -213,13 +212,13 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             # log metrics to wandb
             wandb.log({"Train_Loss": train_loss, "Val_loss": val_loss, "Val_Max_Euclidian_End_Effector_Error" : max_euc_end_effector_error , "Val_Avarege_Euclidian_End_Effector_Error": avg_euc_end_effector_error})
 
-        if(best_wrist_error > avg_euc_end_effector_error):
+        if( avg_euc_end_effector_error < best_wrist_error):
             best_wrist_error = avg_euc_end_effector_error
             time_stamp = time.strftime("%d_%m_%H_%M", time.gmtime())
             filename = model.name + '_epoch_' +str(epoch+1)+'_date_'+time_stamp + '.pt'
             best_model_checkpoint_path = join(config.model_path,filename)
             best_model_checkpoint = {
-                'epoch': epoch+1,
+                'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 # 'scaler_state_dict': scaler.state_dict(),
@@ -462,15 +461,17 @@ def plot_results(config,data_loader,model,device,data_processor ):
             targetsToPlot = np.concatenate((targetsToPlot,unnorm_targets))  
 
     # Create a figure and a grid of subplots with 1 row and 2 columns
-    fig, axes = plt.subplots(2, 2, figsize=(10, 4),sharex=True,sharey=True)  # Adjust figsize as needed
-    rand_plot = random.randint(0,1)
-    plot_length = 10000
-    start_plot = rand_plot*plot_length
-    end_plot = rand_plot*plot_length +plot_length
+    fig, axes = plt.subplots(2, 1, figsize=(10, 4),sharex=True,sharey=True)  # Adjust figsize as needed
+    # rand_plot = random.randint(0,1)
+    # plot_length = 10000
+    # start_plot = rand_plot*plot_length
+    # end_plot = rand_plot*plot_length +plot_length
+    start_plot = 0
+    end_plot = 20000
     # Plot data on the first subplot
-    axes[0,0].plot(predsToPlot[start_plot:end_plot,:12])
-    axes[0,0].set_title('Plot of preds location')
-    axes[0,0].grid()
+    axes[0].plot(predsToPlot[start_plot:end_plot,:12])
+    axes[0].set_title('Plot of preds location')
+    axes[0].grid()
 
     if config.with_velocity:
         axes[0,1].plot(predsToPlot[start_plot:end_plot,12:])
@@ -478,9 +479,9 @@ def plot_results(config,data_loader,model,device,data_processor ):
         axes[0,1].grid()
 
     # Plot data on the second subplot
-    axes[1,0].plot(targetsToPlot[start_plot:end_plot,:12])
-    axes[1,0].set_title('Plot of targets location')
-    axes[1,0].grid()
+    axes[1].plot(targetsToPlot[start_plot:end_plot,:12])
+    axes[1].set_title('Plot of targets location')
+    axes[1].grid()
 
     if config.with_velocity:
         axes[1,1].plot(targetsToPlot[start_plot:end_plot,12:])
@@ -512,12 +513,9 @@ def model_eval_metric(config,model,test_loader,
         inputs = test_loader.dataset.tensors[0]
         targets = test_loader.dataset.tensors[1]
         
-
         inputs = inputs.to(device=device)
         targets = targets.to(device=device)
 
-
-        
         outputs = model(inputs)
         if outputs.dim() == 3:
             outputs = outputs[:,-1,:]
@@ -533,7 +531,38 @@ def model_eval_metric(config,model,test_loader,
         dist = np.sqrt(((outputs - targets)**2).sum(axis=0)/size)
 
     return dist
+def set_seed(seed, torch_deterministic=False, rank=0):
+    """ set seed across modules """
+    if seed == -1 and torch_deterministic:
+        seed = 42 + rank
+    elif seed == -1:
+        seed = np.random.randint(0, 10000)
+    else:
+        seed = seed + rank
 
+    print("Setting seed: {}".format(seed))
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # added these to test if it helps with reproducibility
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+    torch.backends.cudnn.deterministic = True
+
+    if torch_deterministic:
+        # refer to https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
+        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
+    else:
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.deterministic = False
+
+    return seed
 # depricated
 def min_max_unnormalize(data, min_val, max_val,bottom=-1, top=1):
 

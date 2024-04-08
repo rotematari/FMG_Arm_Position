@@ -49,15 +49,15 @@ random_state : 42
 
 
 # hypermeters
-learning_rate : 5.0e-05 # best around 0.0001 0.0006315300709656892
+learning_rate : 0.001 # best around 0.0001 0.0006315300709656892
 dropout : 0.0 #0.2770441390826035
-weight_decay : 1.0e-06 # best around 0.00005
+weight_decay : 3.78e-06 # best around 0.00005
 
 window_size : 16
-sequence_length : 16
+sequence_length : 64
 
 num_epochs : 3
-batch_size : 50
+batch_size : 42
 
 # base_lr : 0.000001  # Minimum learning rate
 # max_lr : 0.001  # Maximum learning rate
@@ -92,15 +92,14 @@ lstm_num_layers : 2
 # the lstm gets [batch,seq,featur]
 # featuremapsize = input_size // cnn2dlstm_maxpoll_kernel_size^len(cnn2dlstm_maxpoll_layers)
 # so the lstm hidden size must = conv_outchannel*featuremapsize 
-conv2d_hidden_sizes: [32,32,32]
+conv2d_hidden_sizes: [32,64,32]
 cnn2dlstm_maxpoll_layers: [0,1,2]
 conv2d_n_heads: 8
-cnn2d_kernel_size: 3
+cnn2d_kernel_size: 5
 cnn2dlstm_maxpoll_kernel_size: 2
-conv2dlstm_hidden_size: 128
+conv2dlstm_hidden_size : 128
 conv2dlstm_num_layers: 2
-cnn2dlstm_dropout : 0.2
-
+cnn2dlstm_dropout : 0.35
 
 # TCN
 clip: 0
@@ -155,7 +154,7 @@ loss_func : RMSELoss
 
 wandb_on: False
 norm: 'std'
-subtract_bias: True
+subtract_bias: False
 norm_labels: True
 plot_data : False
 plot_pred : False

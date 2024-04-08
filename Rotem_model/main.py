@@ -13,7 +13,7 @@ from data.data_processing import DataProcessor
 from models.models import CNNLSTMModel , TransformerModel,DLinear , DecompTransformerModel,Conv2DLSTMAttentionModel,TimeSeriesTransformer
 # from models.Autoformer.models.Autoformer import Model as Autoformer
 from models.PatchTST import Model as PatchTST
-from utils.utils import train, test_model, plot_results,print_model_size, plot_losses
+from utils.utils import train, test_model, plot_results,print_model_size, plot_losses,set_seed
 from pytorch_tcn import TCN
 
 def set_device():
@@ -65,12 +65,7 @@ def parse_args():
 
 def main():
     
-    torch.manual_seed(42)  # Replace 0 with your desired seed
-    # If using CUDA:
-    torch.cuda.manual_seed(42)
-    torch.cuda.manual_seed_all(42)  # For multi-GPU setups
-    np.random.seed(42)
-    random.seed(0)
+    seed = set_seed(42,torch_deterministic=True)
 
     device = set_device()
 
@@ -149,7 +144,6 @@ def main():
 
 
     if config.pre_trained:
-        
         model.load_state_dict(torch.load(config.best_model)['model_state_dict'])
         # Test
 

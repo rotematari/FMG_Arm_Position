@@ -82,7 +82,8 @@ class DataProcessor:
             self.label_scaler.fit(self.train_data[self.label_index])
             self.train_data[self.label_index] = self.label_scaler.transform(self.train_data[self.label_index])
         self.train_data = self.train_data.drop_duplicates().dropna().reset_index(drop=True)
-        #pre process test
+        
+        ######pre process test
         # subtracts the bias on the FMG sensors data
         if self.config.subtract_bias:
             self.test_data[self.config.fmg_index] = subtract_bias(self.test_data[self.config.fmg_index + self.config.session_time_stamp])
@@ -111,7 +112,6 @@ class DataProcessor:
         train_label_df = self.train_data[self.label_index]
         # time_feature = self.data[self.config.time_stamp]
 
-
         # Creating sequences
         train_features = create_sliding_sequences(torch.tensor(train_fmg_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
         train_labels = create_sliding_sequences(torch.tensor(train_label_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
@@ -126,34 +126,6 @@ class DataProcessor:
         test_features = create_sliding_sequences(torch.tensor(test_fmg_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
         test_labels = create_sliding_sequences(torch.tensor(test_label_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
 
-        # features = self.create_sliding_sequences(fmg_df.to_numpy(), self.config.sequence_length)
-        # labels = self.create_sliding_sequences(label_df.to_numpy(), self.config.sequence_length)
-        # time_feature =  create_sliding_sequences(torch.tensor(time_feature.to_numpy(), dtype=torch.float32), self.config.sequence_length)
-            
-        # features = torch.cat((features, time_feature), dim=2)
-        # labels = torch.cat((labels, time_feature), dim=2)
-
-
-
-        # Split the data into training and test sets
-        # shape 
-        # train_fmg, test_fmg, train_label, test_label = train_test_split(features, labels, test_size=self.config.test_size, random_state=self.config.random_state, shuffle=self.config.shuffle)
-        # Split the training data into training and validation sets
-        # train_fmg, val_fmg, train_label, val_label = train_test_split(train_fmg, train_label, test_size=self.config.val_size / (1 - self.config.test_size), random_state=self.config.random_state, shuffle=False)
-        # train_fmg, test_fmg = self.custom_train_test_split(features,self.config.test_size,self.config.test_batch_size)
-        # train_label, test_label = self.custom_train_test_split(labels,self.config.test_size,self.config.test_batch_size)
-        
-        # train_dataset = TensorDataset(train_fmg[:train_label.shape[0],:,:], train_label,
-        #                               train_fmg[:train_label.shape[0],:,-1:])
-        # # val_dataset = TensorDataset(val_fmg[:val_label.shape[0],:,:-1], val_label,val_fmg[:val_label.shape[0],:,-1:])
-        # test_dataset = TensorDataset(test_fmg[:test_label.shape[0],:,:], test_label,
-        #                             test_fmg[:test_label.shape[0],:,-1:])
-        # train_dataset = TensorDataset(torch.tensor(train_fmg[:train_label.shape[0],:,:], dtype=torch.float32), torch.tensor(train_label, dtype=torch.float32),
-        #                             torch.tensor(train_fmg[:train_label.shape[0],:,-1:], dtype=torch.float32))
-        # # val_dataset = TensorDataset(val_fmg[:val_label.shape[0],:,:-1], val_label,val_fmg[:val_label.shape[0],:,-1:])
-        # test_dataset = TensorDataset(torch.tensor(test_fmg[:test_label.shape[0],:,:], dtype=torch.float32), torch.tensor(test_label, dtype=torch.float32),
-        #                             torch.tensor(test_fmg[:test_label.shape[0],:,-1:], dtype=torch.float32))
-        
         train_dataset = TensorDataset(torch.tensor(train_features[:train_labels.shape[0],:,:], dtype=torch.float32), torch.tensor(train_labels, dtype=torch.float32),
                                     torch.tensor(train_features[:train_labels.shape[0],:,-1:], dtype=torch.float32))
 

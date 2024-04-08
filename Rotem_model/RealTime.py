@@ -43,7 +43,7 @@ class RealTimeSystem:
         # Additional initializations (e.g., visualization tools, data savers) can go here
 
         self.first = True
-        self.testFromFlie = True
+        self.testFromFlie = False
 
         if self.testFromFlie:
             self.testInputs = np.load('inputs.npy')
@@ -53,13 +53,14 @@ class RealTimeSystem:
             self.testIndex = 0
         else:
             self.ser = self.initialize_serial()
-            calibration_length = 1000
-            print("start clibration \n ---------------- \n")
+            if False:
+                calibration_length = 1000
+                print("start clibration \n ---------------- \n")
 
-            self.calibrate_system(calibration_length=calibration_length)
-            
-            print("end clibration \n ---------------- \n")
-        
+                self.calibrate_system(calibration_length=calibration_length)
+                
+                print("end clibration \n ---------------- \n")
+        self.session_bias =0
         self.last_Data_Point = [0 for i in range(32)]
 
     def initialize_model(self):
@@ -157,7 +158,7 @@ class RealTimeSystem:
                 sequence = self.last_sequence
             try:
                 #calibrate
-                sequence = sequence- self.session_bias
+                # sequence = sequence- self.session_bias
                 # moving averege 
                 sequence = convolve2d(np.array(sequence).T,np.ones((1,window_size))/window_size,'valid').T
                 #scale
@@ -284,8 +285,7 @@ class RealTimeSystem:
 
 if __name__ == "__main__":
 
-    model_check_point = r'models/saved_models/Conv2DLSTMAttentionModel_good_date_03_04_11_38.pt'
-
+    model_check_point = r'models/saved_models/Conv2DLSTMAttentionModel_epoch_1_date_05_04_13_18.pt'
     realtime = RealTimeSystem(model_check_point)
     realtime.natnet_reader.natnet.run()
     realtime.run()

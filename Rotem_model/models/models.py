@@ -592,14 +592,6 @@ class Conv2DLSTMAttentionModel(nn.Module):
 
         )
         self.config = config
-        # nclass = output_dim
-        # # input_channels = config.input_channels
-        # conv_hidden_sizes = config.conv2d_hidden_sizes
-        # kernel_size = config.cnn2d_kernel_size
-        # lstm_hidden_size = config.conv2dlstm_hidden_size
-        # lstm_num_layers = config.conv2dlstm_num_layers
-        # num_heads = config.conv2d_n_heads
-
         # Convolutional layers
         self.convs = nn.ModuleList()
         in_channels = 1
