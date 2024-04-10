@@ -44,11 +44,9 @@ class DataProcessor:
     def load_data(self,train = True) -> Tensor:
         config = self.config
         #train
-        config.data_path = config.train_data_path
-        self.train_data = self.data_loader(config)
+        self.train_data = self.data_loader(config,config.train_data_path)
         #test
-        config.data_path = config.test_data_path
-        self.test_data = self.data_loader(config)
+        self.test_data = self.data_loader(config,config.test_data_path)
 
         
 
@@ -169,14 +167,14 @@ class DataProcessor:
         # Show the plots
         plt.show()
         return
-    def data_loader(self,config):
+    def data_loader(self,config,data_path):
         """
         Given a directory path, loads all the csv files in the directory and returns a concatenated pandas dataframe.
         """
         
         full_df = pd.DataFrame()
-        for file in listdir(config.data_path):
-            df = pd.read_csv(join(config.data_path,file))
+        for file in listdir(data_path):
+            df = pd.read_csv(join(data_path,file))
             full_df = pd.concat([full_df,df],axis=0,ignore_index=True)
             full_df = full_df.replace(-np.inf, np.nan)
             full_df = full_df.replace(np.inf, np.nan)

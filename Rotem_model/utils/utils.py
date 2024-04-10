@@ -168,7 +168,7 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             train_loss += loss.item()
                     # Print the current learning rate
             current_lr = optimizer.param_groups[0]['lr']
-            train_iterator.set_description(f"Epoch [{epoch+1}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f}  LR: {current_lr}")
+            train_iterator.set_description(f"Epoch [{epoch+1}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f}  LR: {current_lr:.4f}")
             # if i>1 and i%1000 == 0 :
             #     val_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error = test_model(
             #     model=model,

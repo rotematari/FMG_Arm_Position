@@ -52,6 +52,17 @@ def parse_args():
     parser.add_argument('--stable_lr', type=float, help='Stable learning rate to use after drop_epoch')
     parser.add_argument('--kernelsize_tcn', type=int, help='Kernel size for TCN')
     parser.add_argument('--num_channels', help='List of number of channels (e.g., [28, 28])')
+    parser.add_argument('--cnn2d_kernel_size', type=int, help='Kernel size for 2D CNN.')
+    parser.add_argument('--cnn2dlstm_dropout', type=float, help='Dropout rate for CNN2DLSTM.')
+    parser.add_argument('--conv2d_hidden_sizes', help='List of hidden sizes for Conv2D.')
+    parser.add_argument('--conv2d_n_heads', type=int, help='Number of heads for Conv2D.')
+    parser.add_argument('--d_model_transformer', type=int, default=256, help='Dimension of the model')
+    parser.add_argument('--d_ff_transformer', type=int, default=1024, help='Dimension of feed-forward layer')
+    parser.add_argument('--head_dropout_transformer', type=float, default=0.2, help='Dropout rate for heads')
+    parser.add_argument('--fc_dropout_transformer', type=float, default=0.1, help='Dropout rate for fully connected layer')
+    parser.add_argument('--num_layers_transformer', type=int, default=4, help='Number of layers')
+    parser.add_argument('--transformer_n_head', type=int, default=16, help='Number of heads in the transformer')
+
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
@@ -73,7 +84,7 @@ def main():
     run = None
 
     if config.wandb_on:
-        wandb_run = wandb.init(project="FMG_Tune_LSTM", config=config)
+        wandb_run = wandb.init(project="tune_TransformerEnc", config=config)
         # wandb.config.update(allow_val_change=True)
         
         config = wandb.config
@@ -132,9 +143,6 @@ def main():
     elif config.model == 'DecompTransformerModel':
         model = DecompTransformerModel(config).to(device)
     
-    # if config.wandb_on:
-        # config.sequence_length = 2 ** config.sequence_length
-        # config.update(config)
     print(model)
     print_model_size(model)
     print(f"Train_len {len(train_loader)*config.batch_size} samples, ")

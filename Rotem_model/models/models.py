@@ -148,14 +148,15 @@ class TransformerModel(nn.Module):
         self.name = "TransformerModel"
         self.config = config
 
-        input_size, d_model, num_layers, output_size, dropout,d_ff_transformer, n_head= (
+        input_size, d_model, num_layers, output_size, fc_dropout,d_ff_transformer, n_head,head_dropout= (
             config.input_size,
             config.d_model_transformer,
             config.num_layers_transformer,
             config.num_labels,
-            config.dropout,
+            config.fc_dropout_transformer,
             config.d_ff_transformer,
-            config.transformer_n_head
+            config.transformer_n_head,
+            config.head_dropout_transformer
         )
         self.temporal = True
         # self.absenc = AbsolutePositionalEncoding()
@@ -167,8 +168,8 @@ class TransformerModel(nn.Module):
 
         self.transformer_encoder = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(d_model=d_model, nhead=n_head,
-                                    dim_feedforward=d_ff_transformer,activation=F.leaky_relu, batch_first=True,
-                                    dropout=config.head_dropout_transformer),
+                                    dim_feedforward=d_ff_transformer,activation=F.relu, batch_first=True,
+                                    dropout=head_dropout),
             num_layers=num_layers , 
         )
 
@@ -177,14 +178,14 @@ class TransformerModel(nn.Module):
         while current_size//3 > output_size*2 :
             d_model = current_size//3
             fully_connected.append(nn.Linear(current_size, d_model))
-            fully_connected.append(nn.LeakyReLU())
-            fully_connected.append(nn.Dropout(dropout))
+            fully_connected.append(nn.ReLU())
+            fully_connected.append(nn.Dropout(fc_dropout))
 
             current_size = d_model
         
         fully_connected.append(nn.Linear(current_size, output_size))
         self.fully_connected = nn.Sequential(*fully_connected)
-
+        # self.fully_connected =  nn.Linear(d_model, output_size) 
 
 
     def forward(self, x):
