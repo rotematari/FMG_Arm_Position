@@ -17,6 +17,12 @@ parameters:
       - 3
       - 5
       - 9
+  conv2d_n_heads:
+    distribution: categorical
+    values:
+      - 4
+      - 8
+      - 16
   cnn2dlstm_dropout:
     distribution: uniform
     max: 0.5
@@ -36,6 +42,14 @@ parameters:
       - - 32
         - 64
         - 32
+      - - 64
+        - 64
+        - 64
+      - - 32
+        - 64
+        - 128
+        - 64
+        - 32
   conv2d_n_heads:
     distribution: categorical
     values:
@@ -45,7 +59,7 @@ parameters:
   learning_rate:
     distribution: uniform
     max: 0.001
-    min: 1e-06
+    min: 1e-05
   sequence_length:
     distribution: categorical
     values:

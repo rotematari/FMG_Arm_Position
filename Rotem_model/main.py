@@ -13,7 +13,7 @@ from data.data_processing import DataProcessor
 from models.models import CNNLSTMModel , TransformerModel,DLinear , DecompTransformerModel,Conv2DLSTMAttentionModel,TimeSeriesTransformer
 # from models.Autoformer.models.Autoformer import Model as Autoformer
 from models.PatchTST import Model as PatchTST
-from utils.utils import train, test_model, plot_results,print_model_size, plot_losses
+from utils.utils import train, test_model, plot_results,print_model_size, plot_losses, set_seed
 from pytorch_tcn import TCN
 
 def set_device(config):
@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument('--num_channels', help='List of number of channels (e.g., [28, 28])')
     parser.add_argument('--cnn2d_kernel_size', type=int, help='Kernel size for 2D CNN.')
     parser.add_argument('--cnn2dlstm_dropout', type=float, help='Dropout rate for CNN2DLSTM.')
-    parser.add_argument('--conv2d_hidden_sizes', nargs='+', type=int, help='List of hidden sizes for Conv2D.')
+    parser.add_argument('--conv2d_hidden_sizes', help='List of hidden sizes for Conv2D.')
     parser.add_argument('--conv2d_n_heads', type=int, help='Number of heads for Conv2D.')
     args = parser.parse_args()
 
@@ -71,12 +71,7 @@ def parse_args():
 
 def main():
     
-    torch.manual_seed(42)  # Replace 0 with your desired seed
-    # If using CUDA:
-    torch.cuda.manual_seed(42)
-    torch.cuda.manual_seed_all(42)  # For multi-GPU setups
-    np.random.seed(42)
-    random.seed(0)
+    seed = set_seed(42,torch_deterministic=True)
     config = parse_args()
 
     device = set_device(config)

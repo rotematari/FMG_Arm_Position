@@ -431,7 +431,38 @@ def plot_losses(config,train_losses, val_losses=[],train=True):
         plt.show()
         # Show the plot
         plt.show()
+def set_seed(seed, torch_deterministic=False, rank=0):
+    """ set seed across modules """
+    if seed == -1 and torch_deterministic:
+        seed = 42 + rank
+    elif seed == -1:
+        seed = np.random.randint(0, 10000)
+    else:
+        seed = seed + rank
 
+    print("Setting seed: {}".format(seed))
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # added these to test if it helps with reproducibility
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+    torch.backends.cudnn.deterministic = True
+
+    if torch_deterministic:
+        # refer to https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
+        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
+    else:
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.deterministic = False
+
+    return seed
 def plot_results(config,data_loader,model,device,data_processor ):
 
     with torch.no_grad():

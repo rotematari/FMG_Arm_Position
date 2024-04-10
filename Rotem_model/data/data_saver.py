@@ -156,7 +156,7 @@ if __name__ == '__main__':
                         wrist: 'wrist',
                     }    
     sesion_time_stamp = t.strftime("%d_%b_%Y_%H_%M", t.gmtime())
-    file_name = sesion_time_stamp + '_stationery_pos'+'.csv'
+    file_name = sesion_time_stamp + '_straight_arm_pos'+'.csv'
     NatNet = init_natnetClient()
     print(file_name)
     f = open(join(data_dir, file_name), "w")
