@@ -21,7 +21,7 @@ import torch.optim as optim
 import math
 from torch.cuda.amp import autocast, GradScaler
 from tqdm import tqdm
-
+from copy import deepcopy
 class RMSELoss(nn.Module):
     def __init__(self):
         super().__init__()
@@ -122,18 +122,6 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             # Zero the gradients
             optimizer.zero_grad()
 
-            # with autocast():
-                # Forward pass
-            # if model.temporal:
-            #     if model.name == 'DecompTransformerModel':
-            #         season_out, trend_out = model(inputs,time_feature)
-            #         targets_season,targets_trend = decomp(targets)
-            #         outputs = season_out + trend_out
-            #     else:
-
-            #         outputs = model(inputs,time_feature)
-
-            # else :
             outputs = model(inputs)
             
             targets = targets[:,-1,:]
@@ -142,12 +130,6 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             
             
             
-            # if model.name == 'DecompTransformerModel':
-            #     loss = criterion(trend_out[:,-1,:], targets_trend[:,-1,:])
-            #     loss_2 = criterion(season_out[:,-1,:], targets_season[:,-1,:])
-            #     loss = loss + loss_2
-
-            # else:
             loss = criterion(outputs, targets)
 
             loss.backward()
@@ -168,7 +150,7 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             train_loss += loss.item()
                     # Print the current learning rate
             current_lr = optimizer.param_groups[0]['lr']
-            train_iterator.set_description(f"Epoch [{epoch+1}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f}  LR: {current_lr:.4f}")
+            train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f}  LR: {current_lr:.4f}")
             # if i>1 and i%1000 == 0 :
             #     val_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error = test_model(
             #     model=model,
@@ -198,6 +180,7 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
 
         # Print the epoch loss and accuracy values
         print(f'Epoch: {epoch} Train Loss: {train_loss}  Val Loss: {val_loss} \n Avarege Euclidian End Effector Error: {avg_euc_end_effector_error} Max Euclidian End Effector Error:{max_euc_end_effector_error} time for one iteration {1000*avg_iter_time:.4f} ms \n ----------')
+        
         if not model.name in ["TransformerModel", "DecompTransformerModel", "PatchTST"] and config.use_schedualer:
             if isinstance(scheduler,torch.optim.lr_scheduler.ReduceLROnPlateau):
                 scheduler.step(val_loss)
@@ -215,16 +198,15 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
         if( avg_euc_end_effector_error < best_wrist_error):
             best_wrist_error = avg_euc_end_effector_error
             time_stamp = time.strftime("%d_%m_%H_%M", time.gmtime())
-            filename = model.name + '_epoch_' +str(epoch+1)+'_date_'+time_stamp + '.pt'
+            filename = model.name + '_epoch_' +str(epoch)+'_date_'+time_stamp + '.pt'
             best_model_checkpoint_path = join(config.model_path,filename)
             best_model_checkpoint = {
                 'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
+                'model_state_dict': deepcopy(model.state_dict()),
+                'optimizer_state_dict': optimizer.state_dict().copy(),
                 # 'scaler_state_dict': scaler.state_dict(),
                 'loss': val_loss,
                 'config': config if not config.wandb_on else 'in_wandb' ,
-                
                 }
             # Extract the state of the label_scaler
             std_label_scaler_state = {
@@ -296,6 +278,7 @@ def test_model(model, config ,
                 targets = targets[:,-1,:]
                 outputs = outputs[:,-1,:]
                 time_feature = time_feature[:,-1,:]
+
                 
                 # if model.name == 'DecompTransformerModel':
                 #     loss = criterion(trend_out[:,-1,:], targets_trend[:,-1,:])
@@ -304,13 +287,25 @@ def test_model(model, config ,
 
                 # else:
                 loss = criterion(outputs, targets)
+                outputs = outputs.cpu().detach().numpy()
+                targets = targets.cpu().detach().numpy()
+
+                # if config.EMW_on_output:
+                #     # outputs_df = pd.DataFrame(outputs)
+                #     for j ,sample in enumerate(outputs):
+                #         outputs[j] =  calculate_ewma_2d(sample,alpha=config.alpha_on_output)
+
+                # targets = targets[:,-1,:]
+                # outputs = outputs[:,-1,:]
+                # time_feature = time_feature[:,-1,:]
 
                 if config.norm_labels:
-                    unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs.cpu().detach().numpy())
-                    unnorm_targets = data_processor.label_scaler.inverse_transform(targets.cpu().detach().numpy())
+                    unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs)
+                    unnorm_targets = data_processor.label_scaler.inverse_transform(targets)
                 else :
-                    unnorm_outputs = outputs.cpu().detach().numpy()
-                    unnorm_targets = targets.cpu().detach().numpy()
+                    unnorm_outputs = outputs
+                    unnorm_targets = targets
+
 
                 location_error = (np.abs(unnorm_outputs - unnorm_targets).sum(axis=0))/inputs.size(0)
 
@@ -385,8 +380,12 @@ def test_model(model, config ,
                 if not os.path.exists(dir_path):
                     # Create the directory if it does not exist
                     os.makedirs(dir_path)
-                name =  model.name +'_epoch_'+ str(epoch)  + '.pdf'
-                name_txt = model.name +'_epoch_'+ str(epoch)  + '.txt'
+                if task == "test":
+                    name =  model.name +'test' + '.pdf'
+                    name_txt = model.name +'test' + '.txt'
+                else:
+                    name =  model.name +'_epoch_'+ str(epoch)  + '.pdf'
+                    name_txt = model.name +'_epoch_'+ str(epoch)  + '.txt'
                 with open(os.path.join(dir_path,name_txt),'w') as f :
                     f.write(title)
                     f.write(str(config))
@@ -399,8 +398,34 @@ def test_model(model, config ,
 
 
 
+def calculate_ema(values, span):
+    alpha = 2 / (span + 1)
+    ema = np.zeros_like(values)
+    ema[0] = values[0]  # Initialize the first EMA value to the first data point
 
+    for i in range(1, len(values)):
+        ema[i] = alpha * values[i] + (1 - alpha) * ema[i - 1]
 
+    return ema
+def calculate_ewma_2d(data, alpha):
+    """
+    Calculate the EWMA for each sequence in a 2D array where each row is a sequence.
+
+    Parameters:
+    - data (np.array): 2D array of shape (sequence_length, num_features)
+    - alpha (float): Smoothing factor in the range (0, 1)
+
+    Returns:
+    - np.array: EWMA of the same shape as data
+    """
+    # alpha = 2 / (span + 1)
+    ewma = np.zeros_like(data)
+    ewma[0, :] = data[0, :]  # Initialize the first EWMA value to the first data point
+
+    for i in range(1, data.shape[0]):
+        ewma[i, :] = alpha * data[i, :] + (1 - alpha) * ewma[i - 1, :]
+
+    return ewma
 # Function to calculate the model size
 def print_model_size(model):
     model_size = sum(p.numel() for p in model.parameters() if p.requires_grad)

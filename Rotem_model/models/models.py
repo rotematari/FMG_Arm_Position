@@ -75,71 +75,71 @@ class CNNLSTMModel(nn.Module):
         
         return x
 
+class FCC(nn.Module):
+    def __init__(self,config):
+        super(FCC,self).__init__()
+        self.name = "FCC"
+        self.config = config
+    def forward(self, x):
+        x=x
+        return x
 
+class TransformerDecoderModel(nn.Module):
+    def __init__(self, config):
+        super(TransformerModel, self).__init__()
+        self.name = "TransformerModel"
+        self.config = config
 
+        input_size, d_model, num_layers, output_size, fc_dropout,d_ff_transformer, n_head,head_dropout= (
+            config.input_size,
+            config.d_model_transformer,
+            config.num_layers_transformer,
+            config.num_labels,
+            config.fc_dropout_transformer,
+            config.d_ff_transformer,
+            config.transformer_n_head,
+            config.head_dropout_transformer
+        )
+        self.temporal = True
+        # self.absenc = AbsolutePositionalEncoding()
+        if d_model//n_head != 0:
+            d_model = int(d_model/n_head)*n_head
 
-# class CNNLSTMModel(nn.Module):
-#     def __init__(self, config):
-#         super(CNNLSTMModel, self).__init__()
-#         self.name = "CNN_LSTMModel"
-#         self.config = config 
-#         input_size, lstm_hidden_size, lstm_num_layers, dropout,sequence_length, output_size,cnn_hidden_size = (
-#             config.input_size,
-#             config.cnn_hidden_size,
-#             config.lstm_num_layers,
-#             config.dropout,
-#             config.sequence_length,
-#             config.num_labels,
-#             config.cnn_hidden_size
-#         )
-#         self.temporal = False
-#         self.lstm_num_layers = lstm_num_layers
-#         self.lstm_hidden_size = lstm_hidden_size
-#         self.conv1 = nn.Conv1d(in_channels=input_size, out_channels=cnn_hidden_size, kernel_size=3, stride=1, padding=1)
-#         self.conv2 = nn.Conv1d(in_channels=cnn_hidden_size, out_channels=cnn_hidden_size, kernel_size=3, stride=1, padding=1)
-#         self.drop = nn.Dropout1d(dropout)
-#         self.relu = nn.ReLU()
-#         self.batch_norm = nn.BatchNorm1d(lstm_hidden_size)
+        self.embedding = nn.Linear(input_size, d_model)
+        self.temporal_embed = nn.Linear(1, d_model)
 
-#         self.lstm = nn.LSTM(cnn_hidden_size, lstm_hidden_size, lstm_num_layers,proj_size = 6 ,batch_first=True, dropout=dropout, bidirectional=False,)
-#         fully_connected = []
-#         current_size = lstm_hidden_size*2
-#         while current_size//3 > output_size*2:
-#             hidden_size = current_size//3
-#             fully_connected.append(nn.Linear(current_size, hidden_size))
-#             fully_connected.append(nn.ReLU())
-#             fully_connected.append(nn.Dropout(dropout))
+        self.transformer_encoder = nn.TransformerDecoder(
+            nn.TransformerDecoderLayer(d_model=d_model, nhead=n_head,
+                                    dim_feedforward=d_ff_transformer,activation=F.relu, batch_first=True,
+                                    dropout=head_dropout),
+            num_layers=num_layers
+        )
 
-#             current_size = hidden_size
+        fully_connected = []
+        current_size = d_model
+        while current_size//3 > output_size*2 :
+            d_model = current_size//3
+            fully_connected.append(nn.Linear(current_size, d_model))
+            fully_connected.append(nn.ReLU())
+            fully_connected.append(nn.Dropout(fc_dropout))
+
+            current_size = d_model
         
-#         fully_connected.append(nn.Linear(current_size, output_size))
-#         self.fully_connected = nn.Sequential(*fully_connected)
+        fully_connected.append(nn.Linear(current_size, output_size))
+        self.fully_connected = nn.Sequential(*fully_connected)
+        # self.fully_connected =  nn.Linear(d_model, output_size) 
 
 
-#     def forward(self, x):
+    def forward(self, x):
+        #x:shape [batch,seq,feture]
 
+        # x = self.embedding(x) + self.temporal_embed(x_time)
+        x = self.embedding(x)
 
-        
-#         h0 = torch.zeros(self.lstm_num_layers , x.size(0), self.config.num_labels, dtype=torch.float32).to(x.device)
-#         c0 = torch.zeros(self.lstm_num_layers , x.size(0), self.lstm_hidden_size, dtype=torch.float32).to(x.device)
+        x = self.transformer_encoder(x)
 
-#         # convlstm input [batch,featurs,sequence]
-#         x = x.permute(0,2,1)
-#         x = self.conv1(x)
-#         x = self.relu(x)
-#         x = self.batch_norm(x)
-#         x = self.conv2(x)
-#         x = self.relu(x)
-#         x = self.batch_norm(x)
-#         x = x.permute(0,2,1) 
-#         # LSTM gets [batch,sequence,feature]
-#         out,_ = self.lstm(x, (h0.detach(), c0.detach()))
-
-#         # out = out.permute(0,2,1)
-
-#         # out = self.fully_connected(out[:, -1:, :])
-
-#         return out[:, -1:, :]
+        x = self.fully_connected(x[:,:, :])
+        return x
 
 
 class TransformerModel(nn.Module):
@@ -170,7 +170,7 @@ class TransformerModel(nn.Module):
             nn.TransformerEncoderLayer(d_model=d_model, nhead=n_head,
                                     dim_feedforward=d_ff_transformer,activation=F.relu, batch_first=True,
                                     dropout=head_dropout),
-            num_layers=num_layers , 
+            num_layers=num_layers
         )
 
         fully_connected = []
@@ -196,7 +196,7 @@ class TransformerModel(nn.Module):
 
         x = self.transformer_encoder(x)
 
-        x = self.fully_connected(x[:, -1:, :])
+        x = self.fully_connected(x[:,:, :])
         return x
 
 class DecompTransformerModel(nn.Module):
@@ -340,36 +340,6 @@ class AttentionWeightedAverage(nn.Module):
         weighted_avg = torch.sum(weights * x, dim=1, keepdim=True)  # [batch, 1, num_channels]
         return weighted_avg
     
-# class moving_avg(nn.Module):
-#     """
-#     Moving average block to highlight the trend of time series
-#     """
-#     def __init__(self, kernel_size, stride):
-#         super(moving_avg, self).__init__()
-#         self.kernel_size = kernel_size
-#         self.avg = nn.AvgPool1d(kernel_size=kernel_size, stride=stride, padding=0)
-
-#     def forward(self, x):
-#         # padding on the both ends of time series
-#         front = x[:, 0:1, :].repeat(1, (self.kernel_size - 1) // 2, 1)
-#         end = x[:, -1:, :].repeat(1, (self.kernel_size - 1) // 2, 1)
-#         x = torch.cat([front, x, end], dim=1)
-#         x = self.avg(x.permute(0, 2, 1))
-#         x = x.permute(0, 2, 1)
-#         return x
-    
-# class series_decomp(nn.Module):
-#     """
-#     Series decomposition block
-#     """
-#     def __init__(self, kernel_size):
-#         super(series_decomp, self).__init__()
-#         self.moving_avg = moving_avg(kernel_size, stride=1)
-
-#     def forward(self, x):
-#         moving_mean = self.moving_avg(x)
-#         res = x - moving_mean
-#         return res, moving_mean
 
 class DLinear(nn.Module):
     """
@@ -658,7 +628,7 @@ class Conv2DLSTMAttentionModel(nn.Module):
 
         # Apply dense layer
         # Using the output of the last time step
-        x = self.dense(x[:, -1:, :])
+        x = self.dense(x[:, :, :])
         return x
 
 

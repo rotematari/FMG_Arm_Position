@@ -56,12 +56,12 @@ def parse_args():
     parser.add_argument('--cnn2dlstm_dropout', type=float, help='Dropout rate for CNN2DLSTM.')
     parser.add_argument('--conv2d_hidden_sizes', help='List of hidden sizes for Conv2D.')
     parser.add_argument('--conv2d_n_heads', type=int, help='Number of heads for Conv2D.')
-    parser.add_argument('--d_model_transformer', type=int, default=256, help='Dimension of the model')
-    parser.add_argument('--d_ff_transformer', type=int, default=1024, help='Dimension of feed-forward layer')
-    parser.add_argument('--head_dropout_transformer', type=float, default=0.2, help='Dropout rate for heads')
-    parser.add_argument('--fc_dropout_transformer', type=float, default=0.1, help='Dropout rate for fully connected layer')
-    parser.add_argument('--num_layers_transformer', type=int, default=4, help='Number of layers')
-    parser.add_argument('--transformer_n_head', type=int, default=16, help='Number of heads in the transformer')
+    parser.add_argument('--d_model_transformer', type=int, help='Dimension of the model')
+    parser.add_argument('--d_ff_transformer', type=int, help='Dimension of feed-forward layer')
+    parser.add_argument('--head_dropout_transformer', type=float, help='Dropout rate for heads')
+    parser.add_argument('--fc_dropout_transformer', type=float, help='Dropout rate for fully connected layer')
+    parser.add_argument('--num_layers_transformer', type=int, help='Number of layers')
+    parser.add_argument('--transformer_n_head', type=int, help='Number of heads in the transformer')
 
     args = parser.parse_args()
 
@@ -120,6 +120,7 @@ def main():
         model = Conv2DLSTMAttentionModel(config).to(device)
     elif config.model == 'TransformerModel':
         model = TransformerModel(config).to(device)
+        
     elif config.model == 'TimeSeriesTransformer':
         model = TimeSeriesTransformer(config).to(device)
     elif config.model == 'PatchTST':
@@ -154,13 +155,13 @@ def main():
     if config.pre_trained:
         model.load_state_dict(torch.load(config.best_model)['model_state_dict'])
         # Test
-
         test_loss,avg_iter_time, test_avg_location_eror,test_avg_euc_end_effector_eror,test_max_euc_end_effector_eror = test_model(
             model=model,
             config=config,
             data_loader=test_loader,
             data_processor=data_processor,
             device=device,
+            task="test"
         )
         
 
@@ -173,9 +174,8 @@ def main():
                     data_processor=data_processor, 
                     device=device, 
                     wandb_run=run)
-        
 
-        model.load_state_dict(torch.load(best_model_checkpoint_path)['model_state_dict'])
+        model.load_state_dict(torch.load(best_model_checkpoint_path)['model_state_dict'],assign=True)
 
         # Test
 

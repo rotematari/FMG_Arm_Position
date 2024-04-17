@@ -61,17 +61,17 @@ class DataProcessor:
                 self.train_data[self.config.fmg_index] = subtract_bias(self.train_data[self.config.fmg_index + self.config.session_time_stamp])
                 self.train_data = self.train_data.drop_duplicates().dropna().reset_index(drop=True)
 
+
+
+        # normalize
+        self.feature_scaler.fit(self.train_data[self.config.fmg_index])
+        self.train_data[self.config.fmg_index] = self.feature_scaler.transform(self.train_data[self.config.fmg_index])
         # average rolling window
         if self.config.with_velocity:
             self.train_data[self.config.fmg_index + self.config.velocity_label_inedx] = self.train_data[self.config.fmg_index+ self.config.velocity_label_inedx].rolling(window=self.config.window_size).mean()
         else:
             # self.train_data[self.config.fmg_index] = self.train_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
             self.train_data[self.config.fmg_index] = self.train_data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
-
-        # normalize
-        self.feature_scaler.fit(self.train_data[self.config.fmg_index])
-        self.train_data[self.config.fmg_index] = self.feature_scaler.transform(self.train_data[self.config.fmg_index])
-        
         # for i, var in enumerate(self.feature_scaler.var_):
         #     if var < 50:
         #         self.train_data.iloc[:,i] = 0
@@ -87,18 +87,19 @@ class DataProcessor:
             self.test_data[self.config.fmg_index] = subtract_bias(self.test_data[self.config.fmg_index + self.config.session_time_stamp])
             self.test_data = self.test_data.drop_duplicates().dropna().reset_index(drop=True)
 
-        # average rolling window
-        if self.config.with_velocity:
-            self.test_data[self.config.fmg_index + self.config.velocity_label_inedx] = self.test_data[self.config.fmg_index+ self.config.velocity_label_inedx].rolling(window=self.config.window_size).mean()
-        else:
-            # self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
-            self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
+
         
         # normalize
         self.test_data[self.config.fmg_index] = self.feature_scaler.transform(self.test_data[self.config.fmg_index])
         if self.config.norm_labels:
             self.test_data[self.label_index] = self.label_scaler.transform(self.test_data[self.label_index])
         
+        # average rolling window
+        if self.config.with_velocity:
+            self.test_data[self.config.fmg_index + self.config.velocity_label_inedx] = self.test_data[self.config.fmg_index+ self.config.velocity_label_inedx].rolling(window=self.config.window_size).mean()
+        else:
+            # self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
+            self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
         self.test_data = self.test_data.drop_duplicates().dropna().reset_index(drop=True)
 
     def get_data_loaders(self):
