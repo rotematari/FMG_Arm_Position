@@ -51,7 +51,17 @@ class SinusoidalLR(optim.lr_scheduler._LRScheduler):
         lr = self.base_lr + (self.max_lr - self.base_lr) * max(0, (1 - x)) * math.sin(math.pi * x)
 
         return [lr for base_lr in self.base_lrs]
+class Location_Eror(nn.Module):
+    def __init__(self):
+        super(Location_Eror, self).__init__()
 
+    def forward(self, predictions, targets):
+        # Compute the squared differences
+        differences = predictions - targets
+        return differences
+
+def inverse_transform(tensor, mean, std):
+    return tensor * std + mean
 # Example usage:
 # Assuming 'optimizer' is a PyTorch optimizer
 # base_lr = 0.01  # Minimum learning rate
@@ -59,10 +69,12 @@ class SinusoidalLR(optim.lr_scheduler._LRScheduler):
 # step_size_up = 1000  # Number of training iterations for half a sinusoidal cycle
 # scheduler = SinusoidalLR(optimizer, base_lr, max_lr, step_size_up)
 # TODO: add time for iteration for the eval model 
-def train(config, train_loader, val_loader,model,data_processor, device='cpu',wandb_run=None):
+def train(config, train_loader, val_loader,model,data_processor, device='cpu',wandb_run=None,critic =None):
 
     
     optimizer = Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+    if config.with_critic:
+        critic_optimizer = Adam(critic.parameters(), lr=config.critic_lr, weight_decay=config.critic_weight_decay)
     # Check if the model is one of the specified types for custom learning rate scheduling
     if config.use_schedualer:
         if model.name in ["TransformerModel", "DecompTransformerModel", "PatchTST"]:
@@ -92,6 +104,8 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
     
     
     criterion = RMSELoss() if config.loss_func == 'RMSELoss' else MSELoss()
+    if config.with_critic:    
+        critic_criterion = RMSELoss()
 
     decomp = series_decomp(25)
         
@@ -99,16 +113,15 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
 
     train_losses = []
     val_losses = []
-    best_wrist_error = 5
+    best_wrist_error = 5000
 
     print("training starts")
     
-    
-    # scaler = GradScaler()
-    # Train the network
+
     for epoch in range(config.num_epochs):
         # Initialize the epoch loss and accuracy
         train_loss = 0
+        sum_critic_loss = 0
         model.train()
         # Wrap your training loop iterator with tqdm
         train_iterator = tqdm(enumerate(train_loader), total=len(train_loader), desc="Training")
@@ -121,18 +134,39 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
 
             # Zero the gradients
             optimizer.zero_grad()
+            if config.with_critic:
+                critic_optimizer.zero_grad()
 
             outputs = model(inputs)
-            
+            if config.with_critic:
+                critic_out = critic(outputs)
+
             targets = targets[:,-1,:]
+            # outputs = outputs.sum(axis=1)/outputs.size()[1]
             outputs = outputs[:,-1,:]
+            if config.with_critic:
+                critic_out = critic_out[:,-1,:]
             time_feature = time_feature[:,-1,:]
             
+            # # critic model
+            # if config.norm_labels:
+            #     target_mean = torch.tensor(data_processor.label_scaler.mean_.tolist(),dtype=torch.float32).to(device)
+            #     target_var = torch.tensor(data_processor.label_scaler.var_.tolist(),dtype=torch.float32).to(device)
+            #     unnorm_outputs = inverse_transform(outputs,mean=target_mean,std=target_var)
+            #     unnorm_targets = inverse_transform(targets,mean=target_mean,std=target_var)
+            # else :
+            #     unnorm_outputs = outputs
+            #     unnorm_targets = targets
             
-            
+            # critic_truth = unnorm_outputs - unnorm_targets
+            if config.with_critic:
+                critic_truth = targets - outputs
+                critic_loss = critic_criterion(critic_out,critic_truth)
             loss = criterion(outputs, targets)
 
-            loss.backward()
+            loss.backward(retain_graph=True)
+            if config.with_critic:    
+                critic_loss.backward()
 
             # scaler.scale(loss).backward()
 
@@ -143,17 +177,25 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             
             # scaler.step(optimizer)
             optimizer.step()
+            if config.with_critic:
+                critic_optimizer.step()
             # scaler.update()
             if model.name in ["TransformerModel", "DecompTransformerModel", "PatchTST"] and config.use_schedualer:
                 scheduler.step()  # Update the learning rate
             # Update the epoch loss and accuracy
             train_loss += loss.item()
+            if config.with_critic:    
+                sum_critic_loss += critic_loss.item() 
                     # Print the current learning rate
             current_lr = optimizer.param_groups[0]['lr']
-            train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f}  LR: {current_lr:.4f}")
-            # if i>1 and i%1000 == 0 :
+            if config.with_critic:
+                train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f},Critic Loss {(sum_critic_loss/(i+1)):.4f}  LR: {current_lr:.4f}")
+            else:
+                train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f} LR: {current_lr:.4f}")
+            # if  i%1000 == 0 :
             #     val_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error = test_model(
             #     model=model,
+            #     critic=critic,
             #     config=config,
             #     data_loader=val_loader,
             #     data_processor=data_processor,
@@ -162,13 +204,14 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             #     task='validate',
             #     make_pdf= wandb_run)
             #     model.train()
-            # train_iterator.set_description(f"Epoch [{epoch+1}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f} Val Loss: {(val_loss):.4f}  LR: {current_lr}")
-            # val_losses.append(val_loss)
+            #     train_iterator.set_description(f"Epoch [{epoch+1}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f} Val Loss: {(val_loss):.4f}  LR: {current_lr}")
+            #     val_losses.append(val_loss)
         train_loss /= len(train_loader)
         train_losses.append(train_loss)
         
-        val_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error = test_model(
+        val_loss,val_critic_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error = test_model(
             model=model,
+            critic=critic,
             config=config,
             data_loader=val_loader,
             data_processor=data_processor,
@@ -179,8 +222,10 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
         )
 
         # Print the epoch loss and accuracy values
-        print(f'Epoch: {epoch} Train Loss: {train_loss}  Val Loss: {val_loss} \n Avarege Euclidian End Effector Error: {avg_euc_end_effector_error} Max Euclidian End Effector Error:{max_euc_end_effector_error} time for one iteration {1000*avg_iter_time:.4f} ms \n ----------')
-        
+        if config.with_critic:
+            print(f'Epoch: {epoch} Train Loss: {train_loss}  Val Loss: {val_loss} Val Critic Loss: {val_critic_loss} \n Avarege Euclidian End Effector Error: {avg_euc_end_effector_error} Max Euclidian End Effector Error:{max_euc_end_effector_error} time for one iteration {1000*avg_iter_time:.4f} ms \n ----------')
+        else:
+            print(f'Epoch: {epoch} Train Loss: {train_loss}  Val Loss: {val_loss} \n Avarege Euclidian End Effector Error: {avg_euc_end_effector_error} Max Euclidian End Effector Error:{max_euc_end_effector_error} time for one iteration {1000*avg_iter_time:.4f} ms \n ----------')
         if not model.name in ["TransformerModel", "DecompTransformerModel", "PatchTST"] and config.use_schedualer:
             if isinstance(scheduler,torch.optim.lr_scheduler.ReduceLROnPlateau):
                 scheduler.step(val_loss)
@@ -203,7 +248,7 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
             best_model_checkpoint = {
                 'epoch': epoch,
                 'model_state_dict': deepcopy(model.state_dict()),
-                'optimizer_state_dict': optimizer.state_dict().copy(),
+                'optimizer_state_dict': deepcopy(optimizer.state_dict()),
                 # 'scaler_state_dict': scaler.state_dict(),
                 'loss': val_loss,
                 'config': config if not config.wandb_on else 'in_wandb' ,
@@ -240,15 +285,21 @@ def test_model(model, config ,
                 device='cpu',
                 make_pdf=False,
                 epoch = 0,
-                task = 'train'):
+                task = 'train',
+                critic = None):
 
         if config.loss_func == 'MSELoss':
             criterion = MSELoss()
+            if config.with_critic:
+                critic_criterion = RMSELoss()
         elif config.loss_func == 'RMSELoss':
             criterion = RMSELoss()
+            if config.with_critic:
+                critic_criterion = RMSELoss()
 
-        decomp = series_decomp(25)
         total_loss = 0
+        total_critic_loss = 0
+        avg_critic_loss = 0
         total_time = 0
         sum_location_error = 0
         max_euc_end_effector_error = 0
@@ -263,41 +314,39 @@ def test_model(model, config ,
                 
                 start_time = time.time()
 
-                
-                # if model.temporal:
-                #     if model.name == 'DecompTransformerModel':
-                #         season_out, trend_out = model(inputs,time_feature)
-                #         targets_season,targets_trend = decomp(targets)
-                #         outputs = season_out + trend_out
-                #     else:
-                #         outputs = model(inputs,time_feature)
-                    
-                # else :
-                outputs = model(inputs) 
+
+                outputs = model(inputs)
+                if config.with_critic:
+                    critic_out = critic(outputs)
 
                 targets = targets[:,-1,:]
+                # outputs = outputs.sum(axis=1)/outputs.size()[1]
                 outputs = outputs[:,-1,:]
+                if config.with_critic:
+                    critic_out = critic_out[:,-1,:]
                 time_feature = time_feature[:,-1,:]
-
                 
-                # if model.name == 'DecompTransformerModel':
-                #     loss = criterion(trend_out[:,-1,:], targets_trend[:,-1,:])
-                #     loss_2 = criterion(season_out[:,-1,:], targets_season[:,-1,:])
-                #     loss = loss + loss_2
+                # # critic model
+                # if config.norm_labels:
+                #     target_mean = torch.tensor(data_processor.label_scaler.mean_.tolist(),dtype=torch.float32).to(device)
+                #     target_var = torch.tensor(data_processor.label_scaler.scale_.tolist(),dtype=torch.float32).to(device)
+                #     unnorm_outputs = inverse_transform(outputs,mean=target_mean,std=target_var)
+                #     unnorm_targets = inverse_transform(targets,mean=target_mean,std=target_var)
+                # else :
+                #     unnorm_outputs = outputs
+                #     unnorm_targets = targets
+                
+                # critic_truth = unnorm_outputs - unnorm_targets
+                if config.with_critic:
+                    critic_truth = targets - outputs 
+                    critic_loss = critic_criterion(critic_out,critic_truth)
+                loss = criterion(outputs, targets) 
+                if config.with_critic:
+                    outputs = outputs + critic_out
 
-                # else:
-                loss = criterion(outputs, targets)
                 outputs = outputs.cpu().detach().numpy()
                 targets = targets.cpu().detach().numpy()
 
-                # if config.EMW_on_output:
-                #     # outputs_df = pd.DataFrame(outputs)
-                #     for j ,sample in enumerate(outputs):
-                #         outputs[j] =  calculate_ewma_2d(sample,alpha=config.alpha_on_output)
-
-                # targets = targets[:,-1,:]
-                # outputs = outputs[:,-1,:]
-                # time_feature = time_feature[:,-1,:]
 
                 if config.norm_labels:
                     unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs)
@@ -306,7 +355,6 @@ def test_model(model, config ,
                     unnorm_outputs = outputs
                     unnorm_targets = targets
 
-
                 location_error = (np.abs(unnorm_outputs - unnorm_targets).sum(axis=0))/inputs.size(0)
 
                 if i == 0:
@@ -314,7 +362,6 @@ def test_model(model, config ,
                     targetsToPlot = unnorm_targets
                     time_featureToPlot = time_feature
                     inputsToSave = inputs.cpu().detach().numpy()
-
 
                 predsToPlot = np.concatenate((predsToPlot,unnorm_outputs))
                 targetsToPlot = np.concatenate((targetsToPlot,unnorm_targets))
@@ -326,19 +373,24 @@ def test_model(model, config ,
                 end_time = time.time()
                 total_time += (end_time - start_time)
                 total_loss += loss.item()
+                if config.with_critic:
+                    total_critic_loss += critic_loss.item()
                 sum_location_error += location_error
                 current_euc_end_effector_error = euclidian_end_effector_error(location_error[-3:])
                 if current_euc_end_effector_error > max_euc_end_effector_error:
                     max_euc_end_effector_error = current_euc_end_effector_error
 
             avg_loss = total_loss/len(data_loader)
+            if config.with_critic:
+                avg_critic_loss = total_critic_loss/len(data_loader)
             avg_location_error = sum_location_error/len(data_loader)
             avg_iter_time = total_time/len(data_loader)
             avg_euc_end_effector_error = euclidian_end_effector_error(avg_location_error[-3:])
             avg_euc_elbow_error = euclidian_end_effector_error(avg_location_error[-6:-3])
 
             title = (f"Model: {model.name}, Task: {task}\n "
-                    f"MSE Avg Loss: {avg_loss}\n "
+                    f"RMSE Avg Loss: {avg_loss}\n "
+                    f"RMSE Avg Critic Loss: {avg_critic_loss}\n "
                     f"Avg Iter Time: {avg_iter_time}\n "
                     f"Avg Location Error: {avg_location_error}\n "
                     f"Avg Euclidean End Effector Error: {avg_euc_end_effector_error}\n"
@@ -393,7 +445,7 @@ def test_model(model, config ,
                 plt.close()
             
 
-        return avg_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error
+        return avg_loss,avg_critic_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error
 
 
 
@@ -456,7 +508,7 @@ def plot_losses(config,train_losses, val_losses=[],train=True):
         # Show the plot
         plt.show()
 
-def plot_results(config,data_loader,model,device,data_processor ):
+def plot_results(config,data_loader,model,device,data_processor,critic ):
 
     with torch.no_grad():
         model.eval()
@@ -464,24 +516,65 @@ def plot_results(config,data_loader,model,device,data_processor ):
 
             inputs = inputs.to(device=device)
             targets = targets.to(device=device)
-            time_feature = time_feature.to(device=device)
+            # time_feature = time_feature.to(device=device)
 
             
-            outputs = model(inputs)
+            # outputs = model(inputs)
             
+            # targets = targets[:,-1,:]
+            # outputs = outputs[:,-1,:]
+
+            # if config.norm_labels:
+                # unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs.cpu().detach().numpy())
+            #     unnorm_targets = data_processor.label_scaler.inverse_transform(targets.cpu().detach().numpy())
+            # else:
+            #     unnorm_outputs = outputs.cpu().detach().numpy()
+            #     unnorm_targets = targets.cpu().detach().numpy()
+            # if i == 0:
+            #     predsToPlot = unnorm_outputs
+            #     targetsToPlot = unnorm_targets
+            outputs = model(inputs)
+            critic_out = critic(outputs)
+
             targets = targets[:,-1,:]
             outputs = outputs[:,-1,:]
+            critic_out = critic_out[:,-1,:]
+            time_feature = time_feature[:,-1,:]
 
+
+            outputs = outputs - critic_out
+
+            outputs = outputs.cpu().detach().numpy()
+            targets = targets.cpu().detach().numpy()
+
+            
             if config.norm_labels:
-                unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs.cpu().detach().numpy())
-                unnorm_targets = data_processor.label_scaler.inverse_transform(targets.cpu().detach().numpy())
-            else:
-                unnorm_outputs = outputs.cpu().detach().numpy()
-                unnorm_targets = targets.cpu().detach().numpy()
+                unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs)
+                unnorm_targets = data_processor.label_scaler.inverse_transform(targets)
+            else :
+                unnorm_outputs = outputs
+                unnorm_targets = targets
+            # critic model
+            # if config.norm_labels:
+            #     target_mean = torch.tensor(data_processor.label_scaler.mean_.tolist(),dtype=torch.float32).to(device)
+            #     target_var = torch.tensor(data_processor.label_scaler.var_.tolist(),dtype=torch.float32).to(device)
+            #     unnorm_outputs = inverse_transform(outputs,mean=target_mean,std=target_var)
+            #     unnorm_targets = inverse_transform(targets,mean=target_mean,std=target_var)
+            # else :
+            #     unnorm_outputs = outputs
+            #     unnorm_targets = targets
+
+
+            # unnorm_outputs = unnorm_outputs - critic_out
+            # if config.norm_labels:
+            #     unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs)
+            #     unnorm_targets = data_processor.label_scaler.inverse_transform(targets)
+            # else :
+            #     unnorm_outputs = outputs
+            #     unnorm_targets = targets
             if i == 0:
                 predsToPlot = unnorm_outputs
                 targetsToPlot = unnorm_targets
-
             predsToPlot = np.concatenate((predsToPlot,unnorm_outputs))
             targetsToPlot = np.concatenate((targetsToPlot,unnorm_targets))  
 
@@ -494,22 +587,22 @@ def plot_results(config,data_loader,model,device,data_processor ):
     start_plot = 0
     end_plot = 20000
     # Plot data on the first subplot
-    axes[0].plot(predsToPlot[start_plot:end_plot,:12])
+    axes[0].plot(predsToPlot[:,:12])
     axes[0].set_title('Plot of preds location')
     axes[0].grid()
 
     if config.with_velocity:
-        axes[0,1].plot(predsToPlot[start_plot:end_plot,12:])
+        axes[0,1].plot(predsToPlot[:,12:])
         axes[0,1].set_title('Plot of preds V ')
         axes[0,1].grid()
 
     # Plot data on the second subplot
-    axes[1].plot(targetsToPlot[start_plot:end_plot,:12])
+    axes[1].plot(targetsToPlot[:,:12])
     axes[1].set_title('Plot of targets location')
     axes[1].grid()
 
     if config.with_velocity:
-        axes[1,1].plot(targetsToPlot[start_plot:end_plot,12:])
+        axes[1,1].plot(targetsToPlot[:,12:])
         axes[1,1].set_title('Plot of targets V')
         axes[1,1].grid()
         

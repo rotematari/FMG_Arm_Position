@@ -120,7 +120,6 @@ def main():
         model = Conv2DLSTMAttentionModel(config).to(device)
     elif config.model == 'TransformerModel':
         model = TransformerModel(config).to(device)
-        
     elif config.model == 'TimeSeriesTransformer':
         model = TimeSeriesTransformer(config).to(device)
     elif config.model == 'PatchTST':
@@ -143,7 +142,7 @@ def main():
         
     elif config.model == 'DecompTransformerModel':
         model = DecompTransformerModel(config).to(device)
-    
+    critic_model = DLinear(config).to(device)
     print(model)
     print_model_size(model)
     print(f"Train_len {len(train_loader)*config.batch_size} samples, ")
@@ -155,7 +154,7 @@ def main():
     if config.pre_trained:
         model.load_state_dict(torch.load(config.best_model)['model_state_dict'])
         # Test
-        test_loss,avg_iter_time, test_avg_location_eror,test_avg_euc_end_effector_eror,test_max_euc_end_effector_eror = test_model(
+        test_loss,test_critic_loss,avg_iter_time, test_avg_location_eror,test_avg_euc_end_effector_eror,test_max_euc_end_effector_eror = test_model(
             model=model,
             config=config,
             data_loader=test_loader,
@@ -165,12 +164,14 @@ def main():
         )
         
 
-        plot_results(config=config,data_loader=test_loader,model=model,data_processor=data_processor,device=device)
+        plot_results(config=config,data_loader=test_loader,model=model,critic=critic_model,data_processor=data_processor,device=device)
     else:
         
         best_model_checkpoint_path ,best_model_checkpoint= train(config=config, train_loader=train_loader,
                     val_loader=test_loader, 
                     model=model,
+                    
+                    critic=critic_model,
                     data_processor=data_processor, 
                     device=device, 
                     wandb_run=run)
@@ -179,8 +180,9 @@ def main():
 
         # Test
 
-        test_loss,avg_iter_time, test_avg_location_eror,test_avg_euc_end_effector_eror,test_max_euc_end_effector_eror = test_model(
+        test_loss,test_critic_loss,avg_iter_time, test_avg_location_eror,test_avg_euc_end_effector_eror,test_max_euc_end_effector_eror = test_model(
             model=model,
+            critic=critic_model,
             config=config,
             data_loader=test_loader,
             data_processor=data_processor,
@@ -190,10 +192,10 @@ def main():
         )
         
 
-        plot_results(config=config,data_loader=test_loader,model=model,data_processor=data_processor,device=device)
+        plot_results(config=config,data_loader=test_loader,model=model,critic=critic_model,data_processor=data_processor,device=device)
 
             # print("eror in plot")
-    print(f'Test_Loss: {test_loss} \n Test_Avarege_Location_Eror:{test_avg_location_eror} \n Test_Max_Euclidian_End_Effector_Eror : {test_max_euc_end_effector_eror} \n Test_Avarege_Euclidian_End_Effector_Eror: {test_avg_euc_end_effector_eror}')
+    print(f'Test_Loss: {test_loss} Test_Critic_Loss: {test_critic_loss} \n Test_Avarege_Location_Eror:{test_avg_location_eror} \n Test_Max_Euclidian_End_Effector_Eror : {test_max_euc_end_effector_eror} \n Test_Avarege_Euclidian_End_Effector_Eror: {test_avg_euc_end_effector_eror}')
     if config.wandb_on:
         
         artifact = wandb.Artifact('model', type='model')

@@ -165,6 +165,9 @@ class TransformerModel(nn.Module):
 
         self.embedding = nn.Linear(input_size, d_model)
         self.temporal_embed = nn.Linear(1, d_model)
+        
+        # Positional encoding: Input shape: [batch_size, seq_length, d_model]
+        self.positional_encoding = PositionalEncoding(self.config.d_model_transformer, self.config.dropout)
 
         self.transformer_encoder = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(d_model=d_model, nhead=n_head,
@@ -185,6 +188,7 @@ class TransformerModel(nn.Module):
         
         fully_connected.append(nn.Linear(current_size, output_size))
         self.fully_connected = nn.Sequential(*fully_connected)
+
         # self.fully_connected =  nn.Linear(d_model, output_size) 
 
 
@@ -192,7 +196,11 @@ class TransformerModel(nn.Module):
         #x:shape [batch,seq,feture]
 
         # x = self.embedding(x) + self.temporal_embed(x_time)
-        x = self.embedding(x)
+        # x = self.embedding(x)
+
+        x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
+
+        x = self.positional_encoding(x)
 
         x = self.transformer_encoder(x)
 
@@ -357,7 +365,7 @@ class DLinear(nn.Module):
         
         self.decompsition = series_decomp(configs.kernel_size)
         self.individual = configs.individual
-        self.channels = configs.input_size
+        self.channels = configs.num_labels
         self.channels_out = configs.num_labels
 
         if self.individual:
@@ -380,7 +388,7 @@ class DLinear(nn.Module):
             # self.Linear_Trend.weight = nn.Parameter((1/self.seq_len)*torch.ones([self.pred_len,self.seq_len]))
 
         # projection 
-        self.attnproj = ChannelReductionAttentionModel(num_channels=self.channels,new_num_channels=self.channels_out,num_heads=self.config.dlinear_n_heads)
+        # self.attnproj = ChannelReductionAttentionModel(num_channels=self.channels,new_num_channels=self.channels_out,num_heads=self.config.dlinear_n_heads)
         self.fc_projection = nn.Linear(self.channels,self.channels_out)
 
     def forward(self, x):

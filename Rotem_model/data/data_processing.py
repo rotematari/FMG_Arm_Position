@@ -62,7 +62,8 @@ class DataProcessor:
                 self.train_data = self.train_data.drop_duplicates().dropna().reset_index(drop=True)
 
 
-
+        # scale label to milimiters 
+        self.train_data[self.label_index] *= 100
         # normalize
         self.feature_scaler.fit(self.train_data[self.config.fmg_index])
         self.train_data[self.config.fmg_index] = self.feature_scaler.transform(self.train_data[self.config.fmg_index])
@@ -88,7 +89,8 @@ class DataProcessor:
             self.test_data = self.test_data.drop_duplicates().dropna().reset_index(drop=True)
 
 
-        
+        # scale label to milimiters 
+        self.test_data[self.label_index] *= 100
         # normalize
         self.test_data[self.config.fmg_index] = self.feature_scaler.transform(self.test_data[self.config.fmg_index])
         if self.config.norm_labels:
