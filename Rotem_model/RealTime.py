@@ -2,7 +2,7 @@ import torch
 from data.data_processing import DataProcessor
 from sklearn.preprocessing import StandardScaler
 import numpy as np 
-from models.models import CNNLSTMModel,Conv2DLSTMAttentionModel
+from models.models import CNNLSTMModel,Conv2DLSTMAttentionModel,TransformerModel
 from scipy.signal import convolve2d
 import serial
 import matplotlib.pyplot as plt
@@ -67,7 +67,7 @@ class RealTimeSystem:
 
     def initialize_model(self):
         # Initialize and return the model
-        return Conv2DLSTMAttentionModel(self.config).to(self.device)
+        return TransformerModel(self.config).to(self.device)
     
     def initialize_serial(self):
         ser = serial.Serial('/dev/ttyACM0', 115200)
@@ -293,11 +293,11 @@ class DynamicPlot:
         self.ax.set_xlabel('X axis')
         self.ax.set_ylabel('Y axis')
         self.ax.set_zlabel('Z axis')
-        self.ax.set_xlim([-0.4,0.5])
-        self.ax.set_ylim([-0.5,0.5])
-        self.ax.set_zlim([-0.5,0.6])
+        self.ax.set_xlim([-40,55])
+        self.ax.set_ylim([-50,50])
+        self.ax.set_zlim([-50,60])
 
-        self.ax.view_init(elev=30, azim=45)
+        # self.ax.view_init(elev=30, azim=45)
         
         plt.show(block=False)
         plt.pause(0.0001)
@@ -307,6 +307,7 @@ class DynamicPlot:
         self.fig.canvas.blit(self.fig.bbox)
 
     def update_plot(self, new_data_pred, new_data_true):
+
         shoulder_pred = new_data_pred[0,:3]
         elbow_pred = new_data_pred[0,3:6]
         wrist_pred = new_data_pred[0,6:9]
@@ -319,8 +320,8 @@ class DynamicPlot:
         self.line_pred.set_data([shoulder_pred[0], elbow_pred[0], wrist_pred[0]], [shoulder_pred[1], elbow_pred[1], wrist_pred[1]])
         self.line_pred.set_3d_properties([shoulder_pred[2], elbow_pred[2], wrist_pred[2]])
 
-        self.line_true.set_data([shoulder_true[0], elbow_true[0], wrist_true[0]], [shoulder_true[1], elbow_true[1], wrist_true[1]])
-        self.line_true.set_3d_properties([shoulder_true[2], elbow_true[2], wrist_true[2]])
+        self.line_true.set_data([shoulder_true[0]*100, elbow_true[0]*100, wrist_true[0]*100], [shoulder_true[1]*100, elbow_true[1]*100, wrist_true[1]*100])
+        self.line_true.set_3d_properties([shoulder_true[2]*100, elbow_true[2]*100, wrist_true[2]*100])
         # # Update data
         # self.line_pred.set_data(new_data_pred[0,:3], new_data_pred[0,3:6])
         # self.line_pred.set_3d_properties(new_data_pred[])
@@ -344,7 +345,7 @@ class DynamicPlot:
 
 if __name__ == "__main__":
 
-    model_check_point = r'models/saved_models/Conv2DLSTMAttentionModel_epoch_2_date_08_04_11_46.pt'
+    model_check_point = r'models/saved_models/TransformerModel_epoch_0_date_21_04_09_58.pt'
     realtime = RealTimeSystem(model_check_point)
     realtime.natnet_reader.natnet.run()
     realtime.run()

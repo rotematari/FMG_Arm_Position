@@ -189,22 +189,25 @@ class TransformerModel(nn.Module):
         fully_connected.append(nn.Linear(current_size, output_size))
         self.fully_connected = nn.Sequential(*fully_connected)
 
-        # self.fully_connected =  nn.Linear(d_model, output_size) 
+        self.fc_sum =  nn.Linear(self.config.sequence_length, 1) 
 
 
     def forward(self, x):
         #x:shape [batch,seq,feture]
 
         # x = self.embedding(x) + self.temporal_embed(x_time)
-        # x = self.embedding(x)
+        x = self.embedding(x)
 
-        x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
+        # x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
 
-        x = self.positional_encoding(x)
+        # x = self.positional_encoding(x)
 
         x = self.transformer_encoder(x)
 
-        x = self.fully_connected(x[:,:, :])
+        x = self.fully_connected(x) # B, 
+        x = x.permute(0,2,1)
+        x = self.fc_sum(x)
+        x = x.permute(0,2,1) # [batch,1,output=9]
         return x
 
 class DecompTransformerModel(nn.Module):
@@ -392,6 +395,7 @@ class DLinear(nn.Module):
         self.fc_projection = nn.Linear(self.channels,self.channels_out)
 
     def forward(self, x):
+        # x = x.unsqueeze(1)
         # x: [Batch, Input length, Channel]
         seasonal_init, trend_init = self.decompsition(x)
         seasonal_init, trend_init = seasonal_init.permute(0,2,1), trend_init.permute(0,2,1)

@@ -189,9 +189,9 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
                     # Print the current learning rate
             current_lr = optimizer.param_groups[0]['lr']
             if config.with_critic:
-                train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f},Critic Loss {(sum_critic_loss/(i+1)):.4f}  LR: {current_lr:.4f}")
+                train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f},Critic Loss {(sum_critic_loss/(i+1)):.6f}  LR: {current_lr:.4f}")
             else:
-                train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f} LR: {current_lr:.4f}")
+                train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f} LR: {current_lr:.6f}")
             # if  i%1000 == 0 :
             #     val_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error = test_model(
             #     model=model,
@@ -534,15 +534,17 @@ def plot_results(config,data_loader,model,device,data_processor,critic ):
             #     predsToPlot = unnorm_outputs
             #     targetsToPlot = unnorm_targets
             outputs = model(inputs)
-            critic_out = critic(outputs)
+            if config.with_critic:
+                critic_out = critic(outputs)
 
             targets = targets[:,-1,:]
             outputs = outputs[:,-1,:]
-            critic_out = critic_out[:,-1,:]
+            if config.with_critic:
+                critic_out = critic_out[:,-1,:]
             time_feature = time_feature[:,-1,:]
 
-
-            outputs = outputs - critic_out
+            if config.with_critic:
+                outputs = outputs - critic_out
 
             outputs = outputs.cpu().detach().numpy()
             targets = targets.cpu().detach().numpy()

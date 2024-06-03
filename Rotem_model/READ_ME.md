@@ -30,3 +30,7 @@ M1 sholder
 M4 elbow 
 M3 wrist 
 
+
+
+trend filtering 
+dwt descrit wave legth transform 
