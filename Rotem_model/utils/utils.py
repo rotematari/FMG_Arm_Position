@@ -354,9 +354,7 @@ def test_model(model, config ,
                 else :
                     unnorm_outputs = outputs
                     unnorm_targets = targets
-
                 location_error = (np.abs(unnorm_outputs - unnorm_targets).sum(axis=0))/inputs.size(0)
-
                 if i == 0:
                     predsToPlot = unnorm_outputs
                     targetsToPlot = unnorm_targets
@@ -376,26 +374,39 @@ def test_model(model, config ,
                 if config.with_critic:
                     total_critic_loss += critic_loss.item()
                 sum_location_error += location_error
-                current_euc_end_effector_error = euclidian_end_effector_error(location_error[-3:])
-                if current_euc_end_effector_error > max_euc_end_effector_error:
-                    max_euc_end_effector_error = current_euc_end_effector_error
+                # current_euc_end_effector_error = euclidian_end_effector_error(location_error[-3:])
+                # if current_euc_end_effector_error > max_euc_end_effector_error:
+                #     max_euc_end_effector_error = current_euc_end_effector_error
+            
+            
+            # Reshape the arrays to separate the coordinates of each point
+            true_reshaped = targetsToPlot.reshape(-1, 3, 3)  # shape will be [n, 3, 3]
+            pred_reshaped = predsToPlot.reshape(-1, 3, 3)  # shape will be [n, 3, 3]
+            # Calculate the Euclidean distance for each corresponding point
+            distances = np.linalg.norm(true_reshaped - pred_reshaped, axis=2)
+
+            # Calculate the mean error
+            mean_error = np.mean(distances,axis=0)
 
             avg_loss = total_loss/len(data_loader)
-            if config.with_critic:
-                avg_critic_loss = total_critic_loss/len(data_loader)
-            avg_location_error = sum_location_error/len(data_loader)
             avg_iter_time = total_time/len(data_loader)
-            avg_euc_end_effector_error = euclidian_end_effector_error(avg_location_error[-3:])
-            avg_euc_elbow_error = euclidian_end_effector_error(avg_location_error[-6:-3])
+            
+            # if config.with_critic:
+            #     avg_critic_loss = total_critic_loss/len(data_loader)
+            avg_location_error = sum_location_error/len(data_loader)
+            # 
+            # avg_euc_end_effector_error = euclidian_end_effector_error(avg_location_error[-3:])
+            # avg_euc_elbow_error = euclidian_end_effector_error(avg_location_error[-6:-3])
 
             title = (f"Model: {model.name}, Task: {task}\n "
                     f"RMSE Avg Loss: {avg_loss}\n "
                     f"RMSE Avg Critic Loss: {avg_critic_loss}\n "
                     f"Avg Iter Time: {avg_iter_time}\n "
-                    f"Avg Location Error: {avg_location_error}\n "
-                    f"Avg Euclidean End Effector Error: {avg_euc_end_effector_error}\n"
-                    f"Avg Euclidean Elbow Error: {avg_euc_elbow_error}\n"
-                    f"Max Euclidean End Effector Error: {max_euc_end_effector_error}\n")
+                    # f"Avg Location Error: {avg_location_error}\n "
+                    f"Avg Euclidean wrist Error: {mean_error[-1]}\n"
+                    f"Avg Euclidean Elbow Error: {mean_error[1]}\n"
+                    f"Avg Euclidean Sholder Error: {mean_error[0]}\n"
+                    f"Max Euclidean End Effector Error: {distances.max()}\n")
             
             # to save df 
             # np.save('inputs.npy',inputsToSave)
@@ -444,7 +455,8 @@ def test_model(model, config ,
                 plt.savefig(os.path.join(dir_path,name))
                 plt.close()
             
-
+        avg_euc_end_effector_error = mean_error[-1]
+        max_euc_end_effector_error = distances.max()
         return avg_loss,avg_critic_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error
 
 
@@ -876,10 +888,9 @@ def center_diff(config, locations: pd.DataFrame, h=0.01, order=1) -> pd.DataFram
     '3':[-1/60,3/20,-3/4,0,3/4,-3/20,1/60],
     '4':[1/280,-4/105,1/5,-4/5,0,4/5,-1/5,4/105,-1/280],
     }
-    vals_index = config.velocity_label_inedx
-    locations_index = config.label_index 
-    # vals_index = ['VEx', 'VEy', 'VEz', 'VWx', 'VWy', 'VWz']
-    # locations_index = ['MEx', 'MEy', 'MEz', 'MWx', 'MWy', 'MWz']
+    vals_index =config.dfmg_index + config.velocity_label_inedx
+    locations_index = config.fmg_index + config.label_index 
+
     locations_with_velocity = locations.copy()
     
     # Prepare a DataFrame to hold the velocity calculations
@@ -904,5 +915,52 @@ def center_diff(config, locations: pd.DataFrame, h=0.01, order=1) -> pd.DataFram
     
     # Concatenate the original locations DataFrame with the velocity DataFrame
     locations_with_velocity = pd.concat([locations_with_velocity, velocity_df], axis=1)
+    
+    return locations_with_velocity
+
+
+def center_diff_torch(config, locations: pd.DataFrame, h=0.01, order=1) -> pd.DataFrame:
+    coefficients = {
+        '1': [-0.5, 0, 0.5],
+        '2': [1/12, -2/3, 0, 2/3, -1/12],
+        '3': [-1/60, 3/20, -3/4, 0, 3/4, -3/20, 1/60],
+        '4': [1/280, -4/105, 1/5, -4/5, 0, 4/5, -1/5, 4/105, -1/280],
+    }
+    
+    vals_index = config.velocity_label_inedx
+    locations_index = config.label_index
+    
+    locations_with_velocity = locations.copy()
+    
+    # Prepare a DataFrame to hold the velocity calculations
+    velocity_df = pd.DataFrame(index=locations.index, columns=vals_index)
+    velocity_df = velocity_df.fillna(0)  # Fill with zeros
+    
+    coeff = torch.tensor(coefficients[str(order)], device='cuda', dtype=torch.float32)
+    h = torch.tensor(h, device='cuda', dtype=torch.float32)
+    
+    # Convert locations to a PyTorch tensor and move it to the GPU
+    locations_tensor = torch.tensor(locations[locations_index].values, device='cuda', dtype=torch.float32)
+    
+    def apply_central_diff(row_index):
+        if row_index < order or row_index >= len(locations) - order:
+            return torch.zeros(len(vals_index), device='cuda')
+        else:
+            velocities = []
+            for i, loc in enumerate(locations_index):
+                segment = locations_tensor[row_index-order:row_index+order+1, i]
+                velocity = torch.dot(coeff, segment) / h
+                velocities.append(velocity)
+            return torch.tensor(velocities, device='cuda')
+    
+    # Apply the central difference calculation for each valid row
+    results = [apply_central_diff(i) for i in range(len(locations))]
+    results = torch.stack(results)
+    
+    # Convert results back to a DataFrame and move it to CPU
+    results_df = pd.DataFrame(results.cpu().numpy(), columns=vals_index, index=locations.index)
+    
+    # Concatenate the original locations DataFrame with the velocity DataFrame
+    locations_with_velocity = pd.concat([locations_with_velocity, results_df], axis=1)
     
     return locations_with_velocity

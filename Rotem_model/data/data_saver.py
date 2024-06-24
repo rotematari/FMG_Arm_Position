@@ -21,7 +21,7 @@ import argparse
 import pandas as pd
 
 # from FMG_project.utils.utils import print_not_numeric_vals
-data_dir = r'data/data'
+data_dir = r'data/new'
 
 with open(r'config.yaml', 'r') as f:
     args = yaml.safe_load(f)
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                         wrist: 'wrist',
                     }    
     sesion_time_stamp = t.strftime("%d_%b_%Y_%H_%M", t.gmtime())
-    file_name = sesion_time_stamp + '_straight_arm_pos'+'.csv'
+    file_name = sesion_time_stamp + '_slow_move_20k_WithOutEdge'+'.csv'
     NatNet = init_natnetClient()
     print(file_name)
     f = open(join(data_dir, file_name), "w")
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     t.sleep(10)
     marker_data = NatNet.rigidBodyList
     t_start = t.time()
-    num_of_sampls = 30000
+    num_of_sampls = 20000
     for i in range(num_of_sampls):
         
         marker_data = NatNet.rigidBodyList

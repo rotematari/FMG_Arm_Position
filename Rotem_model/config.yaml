@@ -14,9 +14,12 @@ clip: 0
 # feature_scaler.var_>20
 sensor_location: [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
 fmg_index: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18','S19', 'S20', 'S21', 'S22', 'S23', 'S24', 'S25', 'S26', 'S27','S28','S29','S30','S31','S32']
+dfmg_index: ['dS1', 'dS2', 'dS3', 'dS4', 'dS5', 'dS6', 'dS7', 'dS8', 'dS9', 'dS10', 'dS11', 'dS12', 'dS13', 'dS14', 'dS15', 'dS16', 'dS17', 'dS18', 'dS19', 'dS20', 'dS21', 'dS22', 'dS23', 'dS24', 'dS25', 'dS26', 'dS27', 'dS28', 'dS29', 'dS30', 'dS31', 'dS32']
 velocity_label_inedx: [
-       # 'VCx','VCy', 'VCz','VSx', 'VSy', 'VSz', 
-       'VEx', 'VEy', 'VEz', 'VWx', 'VWy', 'VWz']
+       # 'VCx','VCy', 'VCz',
+       'VSx', 'VSy', 'VSz', 
+       'VEx', 'VEy', 'VEz',
+       'VWx', 'VWy', 'VWz']
 session_time_stamp: ['session_time_stamp']
 label_index: [
        # 'MCx','MCy', 'MCz',
@@ -26,7 +29,7 @@ label_index: [
        ]
 time_stamp: ['time_stamp']
 
-model: 'TransformerModel'
+model: 'DecompTransformerModel'
 
 models_to_train: [
        # 'DecompTransformerModel','PatchTST',
@@ -49,13 +52,13 @@ random_state : 42
 
 
 # hypermeters
-learning_rate : 0.00005 # 
+learning_rate : 5.0e-05 # 
 critic_lr : 0.001
 dropout : 0.0 #
-weight_decay : 1.2e-06 # 
+weight_decay : 1.20e-06 # 
 critic_weight_decay : 1.0e-06 # 
 
-window_size : 2
+window_size : 3
 alpha_on_output: 0.1 # between 0 and 1
 sequence_length : 32
 
@@ -117,12 +120,12 @@ TST_d_ff: 1024
 TST_d_model: 256
 
 #transformer_encoder
-d_model_transformer : 128
+d_model_transformer : 256
 d_ff_transformer: 2048
-head_dropout_transformer: 0.2
-fc_dropout_transformer: 0.2
-num_layers_transformer : 4
-transformer_n_head: 8 
+head_dropout_transformer: 0.0
+fc_dropout_transformer: 0.0
+num_layers_transformer : 2
+transformer_n_head: 16 
 
 #for PatchTST
 kernel_PatchTST: 25
@@ -142,11 +145,11 @@ revin: 1 #default=1, help='RevIN; True 1 False 0')
 affine : 0 #default=0, help='RevIN-affine; True 1 False 0')
 
 #paths
-train_data_path : ./data/data
+train_data_path : ./data/new
 test_data_path : ./data/test
 data_path: None
 model_path: ./models/saved_models
-best_model: ./models/saved_models/TransformerModel_epoch_0_date_21_04_09_58.pt
+best_model: ./models/saved_models/TransformerModel_epoch_0_date_13_06_12_22.pt
 result_path: ./test_results
 
 
@@ -162,9 +165,9 @@ norm: 'std'
 subtract_bias: False
 norm_labels: True
 plot_data : False
-plot_pred : False
-pre_trained: False
-with_velocity : False
+plot_pred : false
+pre_trained: false
+with_velocity : false
 # sequence : True
 
 ...

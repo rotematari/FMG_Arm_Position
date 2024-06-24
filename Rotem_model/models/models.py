@@ -196,11 +196,11 @@ class TransformerModel(nn.Module):
         #x:shape [batch,seq,feture]
 
         # x = self.embedding(x) + self.temporal_embed(x_time)
-        x = self.embedding(x)
+        # x = self.embedding(x)
 
-        # x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
+        x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
 
-        # x = self.positional_encoding(x)
+        x = self.positional_encoding(x)
 
         x = self.transformer_encoder(x)
 
@@ -224,25 +224,24 @@ class DecompTransformerModel(nn.Module):
             config.dropout,
         )
         self.decomp = series_decomp(kernel_size=config.kernel_size)
-        self.temporal = True
 
         # self.absenc = AbsolutePositionalEncoding()
-        if d_model//self.config.n_head != 0:
-            d_model = int(d_model/self.config.n_head)*self.config.n_head
+        if d_model//self.config.transformer_n_head != 0:
+            d_model = int(d_model/self.config.transformer_n_head)*self.config.transformer_n_head
 
         self.embedding = nn.Linear(input_size, d_model)
-        self.temporal_embed = nn.Linear(1, d_model)
+
 
 
         self.transformer_encoder_season = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=d_model, nhead=self.config.n_head,dim_feedforward=self.config.d_ff,activation=F.leaky_relu, batch_first=True,
-                                    dropout=config.head_dropout),
+            nn.TransformerEncoderLayer(d_model=d_model, nhead=self.config.transformer_n_head,dim_feedforward=self.config.d_ff_transformer,activation=F.leaky_relu, batch_first=True,
+                                    dropout=config.head_dropout_transformer),
             num_layers=num_layers
         )
 
         self.transformer_encoder_trend = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=d_model, nhead=self.config.n_head,dim_feedforward=self.config.d_ff,activation=F.leaky_relu, batch_first=True,
-                                    dropout=config.head_dropout),
+            nn.TransformerEncoderLayer(d_model=d_model, nhead=self.config.n_head,dim_feedforward=self.config.d_ff_transformer,activation=F.leaky_relu, batch_first=True,
+                                    dropout=config.head_dropout_transformer),
             num_layers=num_layers 
         )
 
@@ -287,7 +286,7 @@ class DecompTransformerModel(nn.Module):
         # trend = trend.permute(1, 0, 2)  # Change it back to the original shape
         trend = self.fully_connected_trend(trend[:, -1:, :])
 
-        return seasonal + trend
+        return seasonal , trend
 
 class moving_avg(nn.Module):
     """
@@ -661,7 +660,7 @@ class TimeSeriesTransformer(nn.Module):
         self.embedding = nn.Linear(self.config.input_size, self.config.TST_d_model)
 
         # Positional encoding: Input shape: [batch_size, seq_length, d_model]
-        self.positional_encoding = PositionalEncoding(self.config.TST_d_model, self.config.dropout, self.config.sequence_length)
+        self.positional_encoding = PositionalEncoding(self.config.TST_d_model, self.config.dropout)
 
         # Transformer: Input shape: [seq_length, batch_size, d_model] for both src and tgt
         self.transformer = nn.Transformer(d_model=self.config.TST_d_model, 

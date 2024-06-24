@@ -100,7 +100,7 @@ if __name__== '__main__':
     #     clean_df.to_csv(r'./data/data/11_Sep_2023_14_50_movment_2_clean.csv',index=False)
 
         # Directory containing the CSV files
-    directory = './data/data'
+    directory = './data/toclean'
 
     # Iterate through all files in the directory
     for filename in os.listdir(directory):
