@@ -99,7 +99,7 @@ def write_line(f,marker_data,sesion_time_stamp,motive_matcher):
         'elbow':[],
         'wrist':[],
     }
-
+    # ser.reset_input_buffer()
     line = ser.readline().decode("utf-8").rstrip(',\r\n') # Read a line from the serial port
     
     # sensor_string = line.split(',')
@@ -112,7 +112,7 @@ def write_line(f,marker_data,sesion_time_stamp,motive_matcher):
         locations[motive_matcher[marker_data[j][0]]].append(marker_data[j][1])
     # read serial line
     locations_string = ','.join(map(str,locations['shoulder'][0]+locations['elbow'][0]+locations['wrist'][0]))
-    if len(sensor_string.split(',')) == 32:
+    if len(sensor_string.split(',')) == 33:
         # sensor_string , marker_string , sesion_time_stamp
         f.write(f'{sensor_string}' + ',' + f'{locations_string}' +','+ f'{sesion_time_stamp}' + '\n')
 
@@ -143,7 +143,7 @@ def plot_data(config,data: pd.DataFrame):
 if __name__ == '__main__':
     for i in range(10):
         ser.readline()
-
+    
     print("make sure the assets set to xyz")
     keys = ['chest', 'shoulder', 'elbow', 'wrist']
     chest = 1
@@ -156,17 +156,17 @@ if __name__ == '__main__':
                         wrist: 'wrist',
                     }    
     sesion_time_stamp = t.strftime("%d_%b_%Y_%H_%M", t.gmtime())
-    file_name = sesion_time_stamp + '_slow_move_20k_WithOutEdge'+'.csv'
+    file_name = sesion_time_stamp + '_test_time'+'.csv'
     NatNet = init_natnetClient()
     print(file_name)
     f = open(join(data_dir, file_name), "w")
-
+    
     write_first_line(f,config=config)
     NatNet.run()
     t.sleep(10)
     marker_data = NatNet.rigidBodyList
     t_start = t.time()
-    num_of_sampls = 20000
+    num_of_sampls = 5000
     for i in range(num_of_sampls):
         
         marker_data = NatNet.rigidBodyList

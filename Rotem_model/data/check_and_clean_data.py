@@ -24,7 +24,7 @@ config = argparse.Namespace(**args)
 def mask(data,config):
 
     # create a mask that selects rows where the values in fmg_index columns are greater than 1024
-    mask1 = (data[config.fmg_index] > 500).any(axis=1)
+    mask1 = (data[config.fmg_index] > 550).any(axis=1)
 
     # create a mask that selects rows where the values in first_position_label_index columns are greater than 2
     mask2 = (data[config.label_index] > 4).any(axis=1)

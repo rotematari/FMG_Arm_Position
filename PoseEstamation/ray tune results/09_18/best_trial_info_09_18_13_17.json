@@ -1,0 +1,13 @@
+{
+    "config": {
+        "name": "DLinear",
+        "learning_rate": 0.0009393743056153994,
+        "weight_decay": 5.0690410707114576e-05,
+        "batch_size": 128,
+        "dropout": 0.25440703841938,
+        "sequence_length": 64,
+        "epochs": 20
+    },
+    "loss": 0.4821471720933914,
+    "wrist_error": 0.15473490953445435
+}

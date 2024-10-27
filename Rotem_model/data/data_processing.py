@@ -10,10 +10,14 @@ import os
 from sklearn.preprocessing import MinMaxScaler,StandardScaler
 # # Change the current working directory to the directory of the main script
 # os.chdir(join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
-
+import time
 from sklearn.model_selection import train_test_split
-from utils.utils import center_diff_torch, subtract_bias, create_sliding_sequences,center_diff
+from utils.utils import center_diff_torch, subtract_bias, create_sliding_sequences,center_diff,create_sliding_sequences_old
+<<<<<<< HEAD
+from sklearn.decomposition import PCA
+=======
 
+>>>>>>> 1276685 (26/08)
 
 class DataProcessor:
     def __init__(self, config ):
@@ -55,11 +59,25 @@ class DataProcessor:
         def preprocess(data):
             # average rolling window
             # data[self.config.fmg_index] = data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
+<<<<<<< HEAD
+            # data[self.config.fmg_index] = data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
+            # data[self.config.label_index] = data[self.config.label_index].ewm(span=self.config.window_size).mean()
+            # data[self.config.fmg_index] = self.numpy_ewma_matrix(data[self.config.fmg_index].to_numpy(), self.config.window_size)
+=======
             data[self.config.fmg_index] = data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
+            # data[self.config.label_index] = data[self.config.label_index].ewm(span=self.config.window_size).mean()
+>>>>>>> 1276685 (26/08)
 
             if self.config.with_velocity:
-                data = center_diff(self.config, locations=data,order=4)
-                data[self.config.dfmg_index + self.config.velocity_label_inedx] = data[self.config.dfmg_index + self.config.velocity_label_inedx].ewm(span=self.config.window_size).mean()
+                start = time.time()
+                data = center_diff_torch(self.config, locations=data,order=4)
+                end = time.time()
+                print(f"time it took to calc velocity {end - start} sec")
+                # data[self.config.dfmg_index + self.config.velocity_label_inedx] = data[self.config.dfmg_index + self.config.velocity_label_inedx].ewm(span=100).mean()
+                data[self.config.velocity_label_inedx] = data[self.config.velocity_label_inedx].ewm(span=100).mean()
+                time_stamp = time.strftime("%d_%m_%H_%M", time.gmtime())
+                file_name = time_stamp + '_full_data_with_velocity.csv'
+                data.to_csv(file_name)
             # scale label to milimiters 
             data[self.label_index] *= 100
             
@@ -67,93 +85,41 @@ class DataProcessor:
             self.feature_scaler.fit(data[self.config.fmg_index])
             data[self.config.fmg_index] = self.feature_scaler.transform(data[self.config.fmg_index])
             if self.config.norm_labels:
-                self.label_scaler.fit(data[self.label_index])
-                data[self.label_index] = self.label_scaler.transform(data[self.label_index])
+                if self.config.velocity_model:
+                    self.label_scaler.fit(data[self.label_index +self.config.velocity_label_inedx])
+                    data[self.label_index + self.config.velocity_label_inedx] = self.label_scaler.transform(data[self.label_index +self.config.velocity_label_inedx])
+                else:
+                    self.label_scaler.fit(data[self.label_index])
+                    data[self.label_index] = self.label_scaler.transform(data[self.label_index])
+<<<<<<< HEAD
+            
+            
+=======
+>>>>>>> 1276685 (26/08)
             data = data.drop_duplicates().dropna().reset_index(drop=True)
             return data
         
         self.train_data = preprocess(self.train_data)
         self.test_data = preprocess(self.test_data)
-        # # average rolling window
-        # self.train_data[self.config.fmg_index] = self.train_data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
-
-        # #pre process train 
-        # if not self.config.data_path == './data/FullData':
-        #     if self.config.with_velocity:
-        #         # adds velocities to the labels
-        #         self.train_data = center_diff(self.config, locations=self.train_data,order=4)
-        #         #test
-        #         self.test_data = center_diff(self.config, locations=self.test_data,order=4)
-
-        # # scale label to milimiters 
-        # self.train_data[self.label_index] *= 100
-        
-        # # normalize
-        # self.feature_scaler.fit(self.train_data[self.config.fmg_index])
-        # self.train_data[self.config.fmg_index] = self.feature_scaler.transform(self.train_data[self.config.fmg_index])
-
-        # # for i, var in enumerate(self.feature_scaler.var_):
-        # #     if var < 50:
-        # #         self.train_data.iloc[:,i] = 0
-
-        # if self.config.norm_labels:
-        #     self.label_scaler.fit(self.train_data[self.label_index])
-        #     self.train_data[self.label_index] = self.label_scaler.transform(self.train_data[self.label_index])
-        # self.train_data = self.train_data.drop_duplicates().dropna().reset_index(drop=True)
-        
-        # ######pre process test
-        # # subtracts the bias on the FMG sensors data
-        # if self.config.subtract_bias:
-        #     self.test_data[self.config.fmg_index] = subtract_bias(self.test_data[self.config.fmg_index + self.config.session_time_stamp])
-        #     self.test_data = self.test_data.drop_duplicates().dropna().reset_index(drop=True)
-        
-        # # average rolling window
-        # if self.config.with_velocity:
-        #     self.test_data[self.config.fmg_index + self.config.velocity_label_inedx] = self.test_data[self.config.fmg_index+ self.config.velocity_label_inedx].rolling(window=self.config.window_size).mean()
-        # else:
-        #     # self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].rolling(window=self.config.window_size).mean()
-        #     self.test_data[self.config.fmg_index] = self.test_data[self.config.fmg_index].ewm(span=self.config.window_size).mean()
-
-        # # scale label to milimiters 
-        # self.test_data[self.label_index] *= 100
-        # # normalize
-        # self.test_data[self.config.fmg_index] = self.feature_scaler.transform(self.test_data[self.config.fmg_index])
-        # if self.config.norm_labels:
-        #     self.test_data[self.label_index] = self.label_scaler.transform(self.test_data[self.label_index])
-        
-
-        # self.test_data = self.test_data.drop_duplicates().dropna().reset_index(drop=True)
 
     def get_data_loaders(self):
         if self.train_data is None:
             print("Data not loaded. Please load the data first.")
             return None, None
 
-        # train_fmg_df = self.train_data[self.config.fmg_index]
-        # train_label_df = self.train_data[self.label_index]
-        # # time_feature = self.data[self.config.time_stamp]
-
-        # # Creating sequences
-        # train_features = create_sliding_sequences(torch.tensor(train_fmg_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
-        # train_labels = create_sliding_sequences(torch.tensor(train_label_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
-
         # Creating sequences
         train_features = create_sliding_sequences(torch.tensor(self.train_data[self.config.fmg_index].to_numpy(), dtype=torch.float32), self.config.sequence_length)
-        train_labels = create_sliding_sequences(torch.tensor(self.train_data[self.label_index].to_numpy(), dtype=torch.float32), self.config.sequence_length)
-        #test 
-        # test_fmg_df = self.test_data[self.config.fmg_index]
-        # test_label_df = self.test_data[self.label_index]
-        # # time_feature = self.data[self.config.time_stamp]
-
-
-        # # Creating sequences
-        # test_features = create_sliding_sequences(torch.tensor(test_fmg_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
-        # test_labels = create_sliding_sequences(torch.tensor(test_label_df.to_numpy(), dtype=torch.float32), self.config.sequence_length)
 
         # Creating sequences
-        test_features = create_sliding_sequences(torch.tensor(self.test_data[self.config.fmg_index].to_numpy(), dtype=torch.float32), self.config.sequence_length)
-        test_labels = create_sliding_sequences(torch.tensor(self.test_data[self.label_index].to_numpy(), dtype=torch.float32), self.config.sequence_length)
+        if self.config.velocity_model:
+            train_labels = create_sliding_sequences(torch.tensor(self.train_data[self.label_index+ self.config.velocity_label_inedx].to_numpy(), dtype=torch.float32), self.config.sequence_length)
+            test_labels = create_sliding_sequences(torch.tensor(self.test_data[self.label_index + self.config.velocity_label_inedx].to_numpy(), dtype=torch.float32), self.config.sequence_length)
+        else:
+            train_labels = create_sliding_sequences(torch.tensor(self.train_data[self.label_index].to_numpy(), dtype=torch.float32), self.config.sequence_length)
+            test_labels = create_sliding_sequences(torch.tensor(self.test_data[self.label_index].to_numpy(), dtype=torch.float32), self.config.sequence_length)
 
+        test_features = create_sliding_sequences(torch.tensor(self.test_data[self.config.fmg_index].to_numpy(), dtype=torch.float32), self.config.sequence_length)
+        
         train_dataset = TensorDataset(torch.tensor(train_features[:train_labels.shape[0],:,:], dtype=torch.float32), torch.tensor(train_labels, dtype=torch.float32),
                                     torch.tensor(train_features[:train_labels.shape[0],:,-1:], dtype=torch.float32))
 
@@ -209,8 +175,10 @@ class DataProcessor:
             full_df = full_df.replace(-np.inf, np.nan)
             full_df = full_df.replace(np.inf, np.nan)
 
-
-        idx = config.fmg_index + config.label_index + config.session_time_stamp #+ config.time_stamp
+        if self.config.velocity_model:
+            idx = config.fmg_index + config.label_index + config.velocity_label_inedx + config.session_time_stamp 
+        else:
+            idx = config.fmg_index + config.label_index + config.session_time_stamp 
 
         return full_df[idx]
     
@@ -241,6 +209,7 @@ class DataProcessor:
         return train_set, test_set
     
     def create_sliding_sequences(self,input_array, sequence_length):
+
         sample_size, features = input_array.shape
         new_sample_size = sample_size - sequence_length + 1
 
@@ -251,3 +220,28 @@ class DataProcessor:
             sequences[i] = input_array[i:i + sequence_length]
 
         return sequences
+    
+    def numpy_ewma(self,data, window):
+
+        alpha = 2 / (window + 1)
+        alpha_rev = 1 - alpha
+        n = data.shape[0]
+
+        pows = alpha_rev**(np.arange(n+1)) + 1e-30
+        
+        scale_arr = 1/pows[:-1]
+        offset = data*pows[1:]
+        pw0 = alpha*alpha_rev**(n-1)
+        
+        mult = data*pw0*scale_arr
+        cumsums = mult.cumsum()
+        out = offset + cumsums*scale_arr[::-1]
+        
+        return out
+    
+    def numpy_ewma_matrix(self,data, window):
+
+        for sensor in range(data.shape[1]):
+            data[:,sensor] = self.numpy_ewma(data[:,sensor], window)
+        
+        return data

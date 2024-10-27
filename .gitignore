@@ -1,12 +1,5 @@
-wandb/
 
-# wandb/debug-internal.log
-# wandb/debug.log
-# wandb/latest-run
-# wandb/debug-internal.log
-# wandb/debug.log
-# wandb/latest-run
-# *.pt
+*.pt
 *.zip
 # FMG_project.zip
 Rotem_model/wandb/
@@ -27,3 +20,8 @@ Rotem_model/results/
 Rotem_model/models/saved_models/
 Rotem_model/data/archive/
 Rotem_model/data/full_muvment_clean/
+Rotem_model/archive/
+Rotem_model/data/
+trajectory_model/data/
+trajectory_model/results/
+PoseEstamation/results/saved_predictions/

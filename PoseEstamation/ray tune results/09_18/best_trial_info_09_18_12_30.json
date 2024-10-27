@@ -1,0 +1,20 @@
+{
+    "config": {
+        "name": "CNN1D",
+        "num_filters": [
+            32,
+            64,
+            128
+        ],
+        "kernel_sizes": 5,
+        "use_batchnorm": true,
+        "learning_rate": 0.00399573613052625,
+        "weight_decay": 8.113547673681963e-05,
+        "batch_size": 128,
+        "dropout": 0.2877370889379395,
+        "sequence_length": 64,
+        "epochs": 20
+    },
+    "loss": 0.4742005430161953,
+    "wrist_error": 0.15611548721790314
+}

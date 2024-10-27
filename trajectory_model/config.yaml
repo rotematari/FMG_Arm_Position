@@ -1,0 +1,32 @@
+# general
+learning_rate: 0.0001
+weight_decay : 0.00001
+sequence_length: 200               # Number of steps in each sequence
+seed: 42
+num_epochs: 15
+batch_size: 32
+data_path: "data/full_data"      # Directory containing CSV files
+model_path: "results/saved_models"
+wandb_on: False
+label_index: [
+       # 'MCx','MCy', 'MCz',
+       'MSx', 'MSy', 'MSz',
+       'MEx', 'MEy', 'MEz',
+       'MWx', 'MWy', 'MWz'
+      ]                            # Column name or index for the label (can be an int if using index)
+
+train_size: 0.95                    # Proportion of data to use for training (0.8 means 80% for training)
+jump: 2                            # Step size for stride sampling
+
+
+# SOFTS
+
+# iTransformer
+iTransformer_num_variates: 9
+iTransformer_dim: 256                          # model dimensions
+iTransformer_depth: 6                          # depth
+iTransformer_heads: 8                          # attention heads
+iTransformer_dim_head: 64                      # head dimension
+iTransformer_pred_length: 100    # can be one prediction, or many
+iTransformer_num_tokens_per_variate: 1         # experimental setting that projects each variate to more than one token. the idea is that the network can learn to divide up into time tokens for more granular attention across time. thanks to flash attention, you should be able to accommodate long sequence lengths just fine
+iTransformer_use_reversible_instance_norm: True # use reversible instance normalization, proposed here https://openreview.net/forum?id=cGDAkQo1C0p . may be redundant given the layernorms within iTransformer (and whatever else attention learns emergently on the first layer, prior to the first layernorm). if i come across some time, i'll gather up all the statistics across variates, project them, and condition the transformer a bit further. that makes more sense

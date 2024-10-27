@@ -10,10 +10,19 @@ import random
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from data.data_processing import DataProcessor
-from models.models import CNNLSTMModel , TransformerModel,DLinear , DecompTransformerModel,Conv2DLSTMAttentionModel,TimeSeriesTransformer
+<<<<<<< HEAD
+from models.models import CNNLSTMModel , TransformerModel,TransformerModelV,DLinear , DecompTransformerModel,Conv2DLSTMAttentionModel,TimeSeriesTransformer,iTransformerModel,iTransformer2DModel
+from models.iTransformer.iTransformer import iTransformer
 # from models.Autoformer.models.Autoformer import Model as Autoformer
 from models.PatchTST import Model as PatchTST
-from utils.utils import train, test_model, plot_results,print_model_size, plot_losses,set_seed
+from models.SOFTS.models.SOFTS import Model as SOFTS
+=======
+from models.models import CNNLSTMModel , TransformerModel,TransformerModelV,DLinear , DecompTransformerModel,Conv2DLSTMAttentionModel,TimeSeriesTransformer
+from models.iTransformer.iTransformer import iTransformer
+# from models.Autoformer.models.Autoformer import Model as Autoformer
+from models.PatchTST import Model as PatchTST
+>>>>>>> 1276685 (26/08)
+from utils.utils import train, test_model, plot_results, print_model_size, plot_losses, set_seed, hybrid_model_training
 from pytorch_tcn import TCN
 
 def set_device():
@@ -119,11 +128,28 @@ def main():
     if config.model == 'Conv2DLSTMAttentionModel':
         model = Conv2DLSTMAttentionModel(config).to(device)
     elif config.model == 'TransformerModel':
-        model = TransformerModel(config).to(device)
+        if config.velocity_model:
+            model = TransformerModel(config).to(device)
+            modelV = TransformerModel(config).to(device)
+        else:
+            model = TransformerModel(config).to(device)
+            modelV = None
+<<<<<<< HEAD
+    elif config.model == 'iTransformerModel':
+        model = iTransformerModel(config).to(device)
+    elif config.model == 'iTransformer2DModel':
+        model = iTransformer2DModel(config).to(device)
+        # model = iTransformer(config).to(device)
+=======
+    elif config.model == 'iTransformer':
+        model = iTransformer(config).to(device)
+>>>>>>> 1276685 (26/08)
     elif config.model == 'TimeSeriesTransformer':
         model = TimeSeriesTransformer(config).to(device)
     elif config.model == 'PatchTST':
         model = PatchTST(config).to(device)
+    elif config.model == 'SOFTS':
+        model = SOFTS(config).to(device)
     elif config.model == 'DLinear':
         model = DLinear(config).to(device)
     elif config.model == 'TCN':
@@ -139,7 +165,6 @@ def main():
                         kernel_initializer = 'xavier_uniform',
                         use_skip_connections = True,
                         input_shape = 'NLC').to(device)
-        
     elif config.model == 'DecompTransformerModel':
         model = DecompTransformerModel(config).to(device)
     critic_model = DLinear(config).to(device)
@@ -163,14 +188,18 @@ def main():
             task="test"
         )
         
-
-        plot_results(config=config,data_loader=test_loader,model=model,critic=critic_model,data_processor=data_processor,device=device)
+        if config.plot_pred:
+            plot_results(config=config,data_loader=test_loader,model=model,critic=critic_model,data_processor=data_processor,device=device)
     else:
         
         best_model_checkpoint_path ,best_model_checkpoint= train(config=config, train_loader=train_loader,
                     val_loader=test_loader, 
                     model=model,
-                    
+<<<<<<< HEAD
+                    # modelV=modelV,
+=======
+                    modelV=modelV,
+>>>>>>> 1276685 (26/08)
                     critic=critic_model,
                     data_processor=data_processor, 
                     device=device, 
@@ -180,22 +209,22 @@ def main():
 
         # Test
 
-        test_loss,test_critic_loss,avg_iter_time, test_avg_location_eror,test_avg_euc_end_effector_eror,test_max_euc_end_effector_eror = test_model(
-            model=model,
-            critic=critic_model,
-            config=config,
-            data_loader=test_loader,
-            data_processor=data_processor,
-            device=device,
-            make_pdf=config.wandb_on,
-            task='test',
-        )
+        # test_loss,test_critic_loss,avg_iter_time, test_avg_location_eror,test_avg_euc_end_effector_eror,test_max_euc_end_effector_eror = test_model(
+        #     model=model,
+        #     critic=critic_model,
+        #     config=config,
+        #     data_loader=test_loader,
+        #     data_processor=data_processor,
+        #     device=device,
+        #     make_pdf=config.wandb_on,
+        #     task='test',
+        # )
         
-
-        plot_results(config=config,data_loader=test_loader,model=model,critic=critic_model,data_processor=data_processor,device=device)
+        if config.plot_pred:
+            plot_results(config=config,data_loader=test_loader,model=model,critic=critic_model,data_processor=data_processor,device=device)
 
             # print("eror in plot")
-    print(f'Test_Loss: {test_loss} Test_Critic_Loss: {test_critic_loss} \n Test_Avarege_Location_Eror:{test_avg_location_eror} \n Test_Max_Euclidian_End_Effector_Eror : {test_max_euc_end_effector_eror} \n Test_Avarege_Euclidian_End_Effector_Eror: {test_avg_euc_end_effector_eror}')
+    # print(f'Test_Loss: {test_loss} Test_Critic_Loss: {test_critic_loss} \n Test_Avarege_Location_Eror:{test_avg_location_eror} \n Test_Max_Euclidian_End_Effector_Eror : {test_max_euc_end_effector_eror} \n Test_Avarege_Euclidian_End_Effector_Eror: {test_avg_euc_end_effector_eror}')
     if config.wandb_on:
         
         artifact = wandb.Artifact('model', type='model')

@@ -1,0 +1,23 @@
+device: cuda
+testFromFile: false
+window_size: 3
+serial_port: /dev/ttyACM0
+serial_baudrate: 115200
+<<<<<<< HEAD
+checkpoint_path: models/saved_models/TransformerModel_epoch_9_date_09_09_15_40.pt
+=======
+checkpoint_path: models/saved_models/good_runs/TransformerModel_epoch_1_date_12_08_08_52.pt
+>>>>>>> 1276685 (26/08)
+maxpastsize: 1000
+data_path: data/test/27_Jun_2024_13_00_test.csv
+
+input_featurs: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 
+                'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18','S19',
+                'S20', 'S21', 'S22', 'S23', 'S24', 'S25', 'S26', 'S27','S28',
+                'S29','S30','S31','S32']
+
+input_labels: [
+        'MSx', 'MSy', 'MSz',
+        'MEx', 'MEy', 'MEz',
+        'MWx', 'MWy', 'MWz'
+        ]

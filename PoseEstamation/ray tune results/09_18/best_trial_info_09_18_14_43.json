@@ -1,0 +1,21 @@
+{
+    "config": {
+        "name": "TransformerModel",
+        "d_model_transformer": 256,
+        "num_layers_transformer": 8,
+        "fc_dropout_transformer": 0.41622132040021087,
+        "d_ff_transformer": 512,
+        "transformer_n_head": 8,
+        "head_dropout_transformer": 0.05454749016213018,
+        "activation": "relu",
+        "use_learnable_positional_encoding": true,
+        "dropout": 0.2216968971838151,
+        "learning_rate": 0.0003752055855124283,
+        "weight_decay": 1.9762189340280113e-05,
+        "batch_size": 16,
+        "sequence_length": 128,
+        "epochs": 30
+    },
+    "loss": 0.6242892350469317,
+    "wrist_error": 0.1758759617805481
+}

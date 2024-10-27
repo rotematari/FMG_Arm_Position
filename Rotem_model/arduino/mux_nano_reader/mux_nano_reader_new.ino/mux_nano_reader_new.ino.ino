@@ -28,7 +28,7 @@ void loop() {
     selection(i);
     delayMicroseconds(10); // Adjust as necessary
     for (int j = 0; j < 2; j++) {
-       dataString += String(analogRead(A[j])) + ",";
+      dataString += String(analogRead(A[j])) + ",";
 //       if (analogRead(A[j])>100){
 //          activeSensors += String(j*16 + i) +","; 
 //          Serial.println(String(j*16 + i));

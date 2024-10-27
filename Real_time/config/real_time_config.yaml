@@ -1,0 +1,23 @@
+real_time:
+  checkpoint_path: "models/trained_models/transformer_model/TransformerModel_epoch_9_date_07_10_11_36.pt"
+  device: "cuda"
+  testFromFile: false
+  data_path: "data/test_data.csv"
+  input_featurs: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 
+       'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18','S19', 'S20', 
+       'S21', 'S22', 'S23', 'S24', 'S25', 'S26', 'S27','S28','S29','S30','S31','S32']
+  input_labels: [
+       # 'MCx','MCy', 'MCz',
+       # 'MSx', 'MSy', 'MSz',
+       'MEx', 'MEy', 'MEz',
+       'MWx', 'MWy', 'MWz']
+  calibration_length: 100
+  maxpastsize: 100
+  serial_port: /dev/ttyACM0
+  serial_baudrate: 115200
+  window_size: 5
+  natnet_server_ip: "192.168.1.1"
+  natnet_multicast_ip: "239.255.42.99"
+  natnet_command_port: 1510
+  natnet_data_port: 1511
+  expected_data_points: 32

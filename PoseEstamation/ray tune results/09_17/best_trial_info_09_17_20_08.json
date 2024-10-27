@@ -1,0 +1,14 @@
+{
+    "config": {
+        "hidden_size": 512,
+        "num_layers": 4,
+        "learning_rate": 0.00010025956902289566,
+        "weight_decay": 2.6828750938254446e-06,
+        "batch_size": 64,
+        "dropout": 0.010292247147901223,
+        "sequence_length": 64,
+        "epochs": 20
+    },
+    "loss": 0.6732141017913819,
+    "wrist_error": 0.1564045548439026
+}
