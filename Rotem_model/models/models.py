@@ -9,7 +9,6 @@ from iTransformer import iTransformer,iTransformer2D
 # from AbsolutePositionalEncoding import AbsolutePositionalEncoding
 # from iTransformer.iTransformer import iTransformer
 
-<<<<<<< HEAD
 
 import torch
 import torch.nn as nn
@@ -124,8 +123,6 @@ class iTransformer2DModel(nn.Module):
         return x
 
 
-=======
->>>>>>> 1276685 (26/08)
 
 class CNNLSTMModel(nn.Module):
     def __init__(self, config):
@@ -284,29 +281,6 @@ class TransformerModel(nn.Module):
             d_model = int(d_model/n_head)*n_head
 
         self.embedding = nn.Linear(input_size, d_model)
-<<<<<<< HEAD
-        # self.embedding = nn.Linear(256, d_model)
-
-        
-        # self.convs = nn.ModuleList()
-        # in_channels = 1
-        # for i, out_channels in enumerate([32,128,32]):
-        #     layers = [
-        #         nn.Conv2d(in_channels, out_channels, 3, padding="same"),
-        #         nn.ReLU()
-        #     ]
-            
-        #     if i in [1,2]:
-        #         layers.append(nn.MaxPool2d(2))
-            
-        #     layers.append(nn.Dropout(0.2))
-
-        #     self.convs.append(nn.Sequential(*layers))
-        #     in_channels = out_channels  # Update in_channels for the next iteration
-=======
-        # self.temporal_embed = nn.Linear(1, d_model)
->>>>>>> 1276685 (26/08)
-        
         # Positional encoding: Input shape: [batch_size, seq_length, d_model]
         self.positional_encoding = PositionalEncoding(self.config.d_model_transformer, self.config.dropout)
 
@@ -331,20 +305,14 @@ class TransformerModel(nn.Module):
         self.fully_connected = nn.Sequential(*fully_connected)
 
         self.fc_sum =  nn.Linear(self.config.sequence_length, 1) 
-<<<<<<< HEAD
         # self.fc_sum =  nn.Linear(8, 1) 
 
         # self.Dlinear_sum = DLinear(self.config)
 
-=======
-        # self.Dlinear_sum = DLinear(self.config)
-
->>>>>>> 1276685 (26/08)
     def forward(self, x, mask=None):
         #x:shape [batch,seq,feture]
         # x = x.unsqueeze(1)
 
-<<<<<<< HEAD
         # for conv in self.convs:
 
         #     x = conv(x)
@@ -352,8 +320,6 @@ class TransformerModel(nn.Module):
         # batch_size, _, height, width = x.size()
         # x = x.view(batch_size, width, -1)
 
-=======
->>>>>>> 1276685 (26/08)
         x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
 
         x = self.positional_encoding(x)
@@ -363,122 +329,9 @@ class TransformerModel(nn.Module):
         x = self.fully_connected(x) # B, 
         x = x.permute(0,2,1)
         # x = self.Dlinear_sum(x)
-<<<<<<< HEAD
         x = self.fc_sum(x)
         x = x.permute(0,2,1) 
         return x[:,-1,:]
-
-class TransformerModelV(nn.Module):
-    def __init__(self, config):
-        super(TransformerModelV, self).__init__()
-        self.name = "TransformerModelV"
-        self.config = config
-
-        input_size, d_model, num_layers, output_size, fc_dropout,d_ff_transformer, n_head,head_dropout= (
-            config.input_size,
-            config.d_model_transformer,
-            config.num_layers_transformer,
-            config.num_labels,
-            config.fc_dropout_transformer,
-            config.d_ff_transformer,
-            config.transformer_n_head,
-            config.head_dropout_transformer
-        )
-        self.temporal = True
-        # self.absenc = AbsolutePositionalEncoding()
-        if d_model//n_head != 0:
-            d_model = int(d_model/n_head)*n_head
-
-        self.embedding = nn.Linear(input_size, config.d_model_transformer)
-        # Positional encoding: Input shape: [batch_size, seq_length, d_model]
-        self.positional_encoding = PositionalEncoding(self.config.d_model_transformer, self.config.dropout)
-
-        self.transformer_encoder = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=d_model, nhead=n_head,
-                                    dim_feedforward=d_ff_transformer,activation=F.relu, batch_first=True,
-                                    dropout=head_dropout),
-            num_layers=num_layers
-        )
-
-        fully_connected = []
-        current_size = d_model
-        fully_connected.append(nn.ReLU())
-        while current_size//3 > output_size*2 :
-            d_model = current_size//3
-            # fully_connected.append(nn.ReLU())
-            fully_connected.append(nn.Linear(current_size, d_model))
-            fully_connected.append(nn.ReLU())
-            fully_connected.append(nn.Dropout(fc_dropout))
-
-            current_size = d_model
-        
-        fully_connected.append(nn.Linear(current_size, output_size))
-        fully_connected.append(nn.ReLU())
-        self.fully_connected = nn.Sequential(*fully_connected)
-
-        self.fc_sum =  nn.Linear(self.config.sequence_length, 1) 
-        # self.Dlinear_sum = DLinear(self.config)
-        
-        
-        self.Vembedding = nn.Linear(input_size, config.d_model_transformer)
-        
-        # Positional encoding: Input shape: [batch_size, seq_length, d_model]
-        self.Vpositional_encoding = PositionalEncoding(self.config.d_model_transformer, self.config.dropout)
-
-        self.Vtransformer_encoder = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=config.d_model_transformer, nhead=n_head,
-                                    dim_feedforward=d_ff_transformer,activation=F.relu, batch_first=True,
-                                    dropout=head_dropout),
-            num_layers=num_layers
-        )
-
-        vfully_connected = []
-        current_size = config.d_model_transformer
-        while current_size//3 > output_size*2 :
-            d_model = current_size//3
-            vfully_connected.append(nn.Linear(current_size, d_model))
-            vfully_connected.append(nn.ReLU())
-            vfully_connected.append(nn.Dropout(fc_dropout))
-
-            current_size = d_model
-        
-        vfully_connected.append(nn.Linear(current_size, output_size))
-        self.Vfully_connected = nn.Sequential(*vfully_connected)
-
-        self.Vfc_sum =  nn.Linear(self.config.sequence_length, 1) 
-        # self.VDlinear_sum = DLinear(self.config)
-
-    def forward(self, x, mask=None):
-        #x:shape [batch,seq,feture]
-
-        v = x.clone()
-        x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
-
-        x = self.positional_encoding(x)
-
-        x = self.transformer_encoder(x,mask=mask)
-
-        x = self.fully_connected(x) # B, 
-        x = x.permute(0,2,1)
-        # x = self.Dlinear_sum(x)
-=======
->>>>>>> 1276685 (26/08)
-        x = self.fc_sum(x)
-        x = x.permute(0,2,1) # [batch,1,output=9]
-
-        v = self.Vembedding(v) * math.sqrt(self.config.d_model_transformer)
-
-        v = self.Vpositional_encoding(v)
-        v = self.Vtransformer_encoder(v,mask=mask)
-        v = self.Vfully_connected(v) 
-
-        v = v.permute(0,2,1)
-        # v = self.VDlinear_sum(v)
-        v = self.fc_sum(v)
-        v = v.permute(0,2,1) # [batch,1,output=9]
-
-        return x,v
-    
 
 class TransformerModelV(nn.Module):
     def __init__(self, config):
@@ -780,11 +633,7 @@ class DLinear(nn.Module):
 
         # projection 
         # self.attnproj = ChannelReductionAttentionModel(num_channels=self.channels,new_num_channels=self.channels_out,num_heads=self.config.dlinear_n_heads)
-<<<<<<< HEAD
         self.fc_projection = nn.Linear(self.input_size,self.channels)
-=======
-        self.fc_projection = nn.Linear(self.channels,self.channels)
->>>>>>> 1276685 (26/08)
 
     def forward(self, x):
         # x = x.unsqueeze(1)

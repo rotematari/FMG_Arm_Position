@@ -1,8 +1,8 @@
 # general
 model: "TransformerModel" 
 # options "FullyConnectedNetwork",CNN1D,DLinear,TransformerModel,Conv2DLSTMAttentionModel,CNNLSTMModel
-pre_trained: false
-pre_trained_path: 'results/TransformerModel/best/TransformerModel_epoch_9_date_01_10_10_04.pt'
+pre_trained: true 
+pre_trained_path: 'results/TransformerModel/best/TransformerModel_epoch_9_date_07_10_11_36.pt'
 input_size: 32
 output_size: 6
 

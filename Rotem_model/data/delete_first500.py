@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 # Path to the folder containing CSV files
-folder_path = 'Rotem_model/data/new'
+folder_path = 'data/multi_user/avishai'
 
 # Loop through each file in the folder
 for filename in os.listdir(folder_path):

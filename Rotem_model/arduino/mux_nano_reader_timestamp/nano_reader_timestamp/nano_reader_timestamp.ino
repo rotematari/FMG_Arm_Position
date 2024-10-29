@@ -23,8 +23,7 @@ void setup() {
 
 void loop() {
   String dataString = "";
-  
-
+ 
   for (int i = 0; i < 16; i++) {
     selection(i);
     delayMicroseconds(10); // Adjust as necessary
@@ -37,11 +36,8 @@ void loop() {
     }
   }
 
-<<<<<<< HEAD
 //  dataString += String(millis() - startTime);
-=======
-  dataString += String(millis() - startTime);
->>>>>>> 1276685 (26/08)
+
   Serial.println(dataString);
 //   Serial.println(activeSensors);
   // Optional: Small delay to prevent buffer overflow in Serial communication

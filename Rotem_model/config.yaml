@@ -1,240 +1,390 @@
----
+# ---
+# # Define the argument parse
+
+
+
+# # data headers 
+# # sensor arangment from the left 16 is the first  
+# # upper arm 0,3,2,1,
+# # shoulder (from the right) 20,21,25,23,22,24,8,9,6,7
+# # back (from the right) 4,5,15,14,13,12,10,11,31,30,29,28,27,26,16,17,19,18
+
+# clip: 0
+
+# # feature_scaler.var_>20
+# sensor_location: [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+# fmg_index: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18','S19', 'S20', 'S21', 'S22', 'S23', 'S24', 'S25', 'S26', 'S27','S28','S29','S30','S31','S32']
+# dfmg_index: ['dS1', 'dS2', 'dS3', 'dS4', 'dS5', 'dS6', 'dS7', 'dS8', 'dS9', 'dS10', 'dS11', 'dS12', 'dS13', 'dS14', 'dS15', 'dS16', 'dS17', 'dS18', 'dS19', 'dS20', 'dS21', 'dS22', 'dS23', 'dS24', 'dS25', 'dS26', 'dS27', 'dS28', 'dS29', 'dS30', 'dS31', 'dS32']
+# velocity_label_inedx: [
+#        'VSx', 'VSy', 'VSz', 
+#        'VEx', 'VEy', 'VEz',
+#        'VWx', 'VWy', 'VWz']
+# session_time_stamp: ['session_time_stamp']
+# label_index: [
+#        # 'MCx','MCy', 'MCz',
+#        'MSx', 'MSy', 'MSz',
+#        'MEx', 'MEy', 'MEz',
+#        'MWx', 'MWy', 'MWz'
+#        ]
+# time_stamp: ['time_stamp']
+
+# model: 'TransformerModel'
+
+# models_to_train: [
+#        # 'DecompTransformerModel','PatchTST',
+#        # 'TransformerModel',Conv2DLSTMAttentionModel,TimeSeriesTransformer
+#        'CNN_LSTMModel',
+#        'TCN','DLinear','iTransformerModel','iTransformer2DModel']
+
+
+# input_size: 32
+# # change the code to only get the label_indexs
+# num_labels : 9
+# sample_speed : 100 #Hz
+
+
+# test_size: 30000
+# test_batch_size: 2500
+
+# random_state : 42
+
+
+
+
+# # hypermeters
+
+# learning_rate : 5.0e-04 # best for transformers 5.0e-04
+# critic_lr : 0.001
+# dropout : 0.2 #
+# weight_decay : 2.0e-03 # best for transformers 2.0e-03 
+
+# critic_weight_decay : 1.0e-04 # 
+
+# learning_rate : 2.0e-06 # 
+# critic_lr : 0.001
+# dropout : 0.2 #
+# weight_decay : 2.0e-06 # 
+
+
+# critic_weight_decay : 1.0e-05 # 
+
+# window_size : 1
+# alpha_on_output: 0.1 # between 0 and 1
+# sequence_length : 32
+# loc_loss_weight: 0.5
+# vel_loss_weight: 0.5
+
+# num_epochs : 20
+
+# num_epochs : 5
+
+# batch_size : 40
+
+# # base_lr : 0.000001  # Minimum learning rate
+# # max_lr : 0.001  # Maximum learning rate
+# # step_size : 1  
+# # gamma: 0.01
+# #step LR
+# # stable_lr: 1.0e-03 
+# # drop_epoch : 1
+
+# # noamLR
+# warmup_steps: 4000
+# use_schedualer: False
+
+
+# #for Dlinear
+# individual : True
+# pred_len: 1
+# use_attnproj: False
+# dlinear_n_heads: 8
+# output_channels: 1
+
+# #decomposition 
+# kernel_size: 5
+
+# # from convLSTM
+# cnn_hidden_size: 256
+# cnn_kernel_size: 3
+# maxpoll_kernel_size: 2 
+# lstm_hidden_size : 256
+# lstm_num_layers : 2
+
+# # conv2dLSTM
+# # the lstm gets [batch,seq,featur]
+# # featuremapsize = input_size // cnn2dlstm_maxpoll_kernel_size^len(cnn2dlstm_maxpoll_layers)
+# # so the lstm hidden size must = conv_outchannel*featuremapsize 
+# conv2d_hidden_sizes: [32,128,32]
+# cnn2dlstm_maxpoll_layers: [0,1,2]
+# conv2d_n_heads: 8
+# cnn2d_kernel_size: 3
+# cnn2dlstm_maxpoll_kernel_size: 2
+# conv2dlstm_hidden_size : 0
+# conv2dlstm_num_layers : 2
+# cnn2dlstm_dropout : 0.2
+
+# # TCN
+# num_channels: [28,56,112,56,28,14,9]
+# kernelsize_tcn : 9
+
+# #time series transformer
+# TST_encoder_layers : 2
+# TST_decoder_layers : 2
+# TST_n_head: 16
+# TST_d_ff: 1024
+# TST_d_model: 256
+
+# #transformer_encoder
+# d_model_transformer : 128
+# d_ff_transformer: 2048
+# head_dropout_transformer: 0.05
+# fc_dropout_transformer: 0.1
+
+# num_layers_transformer : 4
+# transformer_n_head: 8
+# mask_ratio: 0.0
+
+
+# # SOFTS
+
+# SOFTS_activation: 'gelu'
+# SOFTS_model: 'SOFTS'
+# SOFTS_d_model: 256 
+# SOFTS_d_core: 128 
+# SOFTS_d_ff: 256 
+# SOFTS_e_layers: 1
+# SOFTS_use_norm : False
+# SOFTS_fc_dropout: 0.1
+
+# #iTransformer 
+
+# output_attention_itrans: false
+# dropout_itrans: 0.5
+# d_model_itrans: 128
+# n_heads_itrans: 8 
+# d_ff_itrans: 1024
+# e_layers_itrans: 4
+
+# iTransformer_num_variates: 32
+# iTransformer_dim: 256                          # model dimensions
+# iTransformer_depth: 2                          # depth
+# iTransformer_heads: 8                          # attention heads
+# iTransformer_dim_head: 64                      # head dimension
+# iTransformer_pred_length: 1    # can be one prediction, or many
+# iTransformer_num_tokens_per_variate: 1         # experimental setting that projects each variate to more than one token. the idea is that the network can learn to divide up into time tokens for more granular attention across time. thanks to flash attention, you should be able to accommodate long sequence lengths just fine
+# iTransformer_use_reversible_instance_norm: True # use reversible instance normalization, proposed here https://openreview.net/forum?id=cGDAkQo1C0p . may be redundant given the layernorms within iTransformer (and whatever else attention learns emergently on the first layer, prior to the first layernorm). if i come across some time, i'll gather up all the statistics across variates, project them, and condition the transformer a bit further. that makes more sense
+# iTransformer_num_time_tokens: 4
+
+
+# #for PatchTST
+# kernel_PatchTST: 25
+# stride: 2
+# patch_len : 8
+# n_head_PatchTST : 8
+# padding_patch : 'end' # default='end', help='None: None; end: padding on the end'
+# encoder_layers : 2
+# decoder_layers : 
+# d_model: 128
+# d_ff: 1024 # fullyconnected
+# fc_dropout : 0.1
+# head_dropout : 0.1
+# subtract_last: False
+# decomposition: True
+# revin: 1 #default=1, help='RevIN; True 1 False 0')
+# affine : 0 #default=0, help='RevIN-affine; True 1 False 0')
+
+# #paths
+# train_data_path : ./data/new
+# test_data_path : ./data/test
+
+# data_path: None
+# model_path: ./models/saved_models
+# best_model:  models/saved_models/TransformerModel_epoch_9_date_09_09_15_40.pt
+# result_path: ./test_results
+
+
+
+# shuffle_train : true
+# shuffle: False
+
+# with_critic : False
+# loss_func : RMSELoss
+# EMW_on_output: True
+# wandb_on: false
+# norm: 'std'
+# subtract_bias: False
+# norm_labels: True
+# plot_data : False
+# plot_pred : false
+# pre_trained: false
+# with_velocity : false
+# velocity_model : false
+# # sequence : True
+
+# ...
+
+
 # Define the argument parse
 
-
-
-# data headers 
-# sensor arangment from the left 16 is the first  
-# upper arm 0,3,2,1,
-# shoulder (from the right) 20,21,25,23,22,24,8,9,6,7
-# back (from the right) 4,5,15,14,13,12,10,11,31,30,29,28,27,26,16,17,19,18
+# Data headers
+# Sensor arrangement from the left 16 is the first  
+# Upper arm: 0, 3, 2, 1
+# Shoulder (from the right): 20, 21, 25, 23, 22, 24, 8, 9, 6, 7
+# Back (from the right): 4, 5, 15, 14, 13, 12, 10, 11, 31, 30, 29, 28, 27, 26, 16, 17, 19, 18
 
 clip: 0
 
-# feature_scaler.var_>20
-sensor_location: [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
-fmg_index: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18','S19', 'S20', 'S21', 'S22', 'S23', 'S24', 'S25', 'S26', 'S27','S28','S29','S30','S31','S32']
+sensor_location: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+fmg_index: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19', 'S20', 'S21', 'S22', 'S23', 'S24', 'S25', 'S26', 'S27', 'S28', 'S29', 'S30', 'S31', 'S32']
 dfmg_index: ['dS1', 'dS2', 'dS3', 'dS4', 'dS5', 'dS6', 'dS7', 'dS8', 'dS9', 'dS10', 'dS11', 'dS12', 'dS13', 'dS14', 'dS15', 'dS16', 'dS17', 'dS18', 'dS19', 'dS20', 'dS21', 'dS22', 'dS23', 'dS24', 'dS25', 'dS26', 'dS27', 'dS28', 'dS29', 'dS30', 'dS31', 'dS32']
-velocity_label_inedx: [
-       'VSx', 'VSy', 'VSz', 
-       'VEx', 'VEy', 'VEz',
-       'VWx', 'VWy', 'VWz']
+velocity_label_index: ['VSx', 'VSy', 'VSz', 'VEx', 'VEy', 'VEz', 'VWx', 'VWy', 'VWz']
 session_time_stamp: ['session_time_stamp']
-label_index: [
-       # 'MCx','MCy', 'MCz',
-       'MSx', 'MSy', 'MSz',
-       'MEx', 'MEy', 'MEz',
-       'MWx', 'MWy', 'MWz'
-       ]
+label_index: ['MSx', 'MSy', 'MSz', 'MEx', 'MEy', 'MEz', 'MWx', 'MWy', 'MWz']
 time_stamp: ['time_stamp']
 
 model: 'TransformerModel'
 
-models_to_train: [
-       # 'DecompTransformerModel','PatchTST',
-       # 'TransformerModel',Conv2DLSTMAttentionModel,TimeSeriesTransformer
-       'CNN_LSTMModel',
-<<<<<<< HEAD
-       'TCN','DLinear','iTransformerModel','iTransformer2DModel']
-=======
-       'TCN','DLinear',iTransformer]
->>>>>>> 1276685 (26/08)
-# data parameters 
-input_size: 32
-# change the code to only get the label_indexs
-num_labels : 9
-sample_speed : 100 #Hz
+models_to_train: ['CNN_LSTMModel', 'TCN', 'DLinear', 'iTransformerModel', 'iTransformer2DModel']
 
+input_size: 32
+num_labels: 9
+sample_speed: 100 # Hz
 
 test_size: 30000
 test_batch_size: 2500
+random_state: 42
 
-random_state : 42
+# Hyperparameters
+learning_rate: 2.0e-06
+critic_lr: 0.001
+dropout: 0.2
+weight_decay: 2.0e-06
+critic_weight_decay: 1.0e-05
 
-
-
-
-# hypermeters
-<<<<<<< HEAD
-learning_rate : 5.0e-04 # best for transformers 5.0e-04
-critic_lr : 0.001
-dropout : 0.2 #
-weight_decay : 2.0e-03 # best for transformers 2.0e-03 
-
-critic_weight_decay : 1.0e-04 # 
-=======
-learning_rate : 2.0e-06 # 
-critic_lr : 0.001
-dropout : 0.2 #
-weight_decay : 2.0e-06 # 
->>>>>>> 1276685 (26/08)
-
-critic_weight_decay : 1.0e-05 # 
-
-window_size : 1
-alpha_on_output: 0.1 # between 0 and 1
-sequence_length : 32
+window_size: 1
+alpha_on_output: 0.1
+sequence_length: 32
 loc_loss_weight: 0.5
 vel_loss_weight: 0.5
-<<<<<<< HEAD
-num_epochs : 20
-=======
-num_epochs : 5
->>>>>>> 1276685 (26/08)
-batch_size : 40
 
-# base_lr : 0.000001  # Minimum learning rate
-# max_lr : 0.001  # Maximum learning rate
-# step_size : 1  
-# gamma: 0.01
-#step LR
-# stable_lr: 1.0e-03 
-# drop_epoch : 1
+num_epochs: 5
+batch_size: 40
 
-# noamLR
+# Learning rate scheduler
 warmup_steps: 4000
-use_schedualer: False
+use_scheduler: False
 
-
-#for Dlinear
-individual : True
+# DLinear
+individual: True
 pred_len: 1
 use_attnproj: False
 dlinear_n_heads: 8
 output_channels: 1
 
-#decomposition 
+# Decomposition
 kernel_size: 5
 
-# from convLSTM
+# ConvLSTM
 cnn_hidden_size: 256
 cnn_kernel_size: 3
-maxpoll_kernel_size: 2 
-lstm_hidden_size : 256
-lstm_num_layers : 2
+maxpool_kernel_size: 2
+lstm_hidden_size: 256
+lstm_num_layers: 2
 
-# conv2dLSTM
-# the lstm gets [batch,seq,featur]
-# featuremapsize = input_size // cnn2dlstm_maxpoll_kernel_size^len(cnn2dlstm_maxpoll_layers)
-# so the lstm hidden size must = conv_outchannel*featuremapsize 
-conv2d_hidden_sizes: [32,128,32]
-cnn2dlstm_maxpoll_layers: [0,1,2]
+# Conv2DLSTM
+conv2d_hidden_sizes: [32, 128, 32]
+cnn2dlstm_maxpool_layers: [0, 1, 2]
 conv2d_n_heads: 8
 cnn2d_kernel_size: 3
-cnn2dlstm_maxpoll_kernel_size: 2
-conv2dlstm_hidden_size : 0
-conv2dlstm_num_layers : 2
-cnn2dlstm_dropout : 0.2
+cnn2dlstm_maxpool_kernel_size: 2
+conv2dlstm_hidden_size: 0
+conv2dlstm_num_layers: 2
+cnn2dlstm_dropout: 0.2
 
 # TCN
-num_channels: [28,56,112,56,28,14,9]
-kernelsize_tcn : 9
+num_channels: [28, 56, 112, 56, 28, 14, 9]
+kernelsize_tcn: 9
 
-#time series transformer
-TST_encoder_layers : 2
-TST_decoder_layers : 2
+# Time Series Transformer
+TST_encoder_layers: 2
+TST_decoder_layers: 2
 TST_n_head: 16
 TST_d_ff: 1024
 TST_d_model: 256
 
-#transformer_encoder
-d_model_transformer : 128
+# Transformer Encoder
+d_model_transformer: 128
 d_ff_transformer: 2048
-<<<<<<< HEAD
-head_dropout_transformer: 0.05
-fc_dropout_transformer: 0.1
-=======
 head_dropout_transformer: 0.1
 fc_dropout_transformer: 0.5
->>>>>>> 1276685 (26/08)
-num_layers_transformer : 4
+num_layers_transformer: 4
 transformer_n_head: 8
 mask_ratio: 0.0
 
-<<<<<<< HEAD
 # SOFTS
-
 SOFTS_activation: 'gelu'
 SOFTS_model: 'SOFTS'
-SOFTS_d_model: 256 
-SOFTS_d_core: 128 
-SOFTS_d_ff: 256 
+SOFTS_d_model: 256
+SOFTS_d_core: 128
+SOFTS_d_ff: 256
 SOFTS_e_layers: 1
-SOFTS_use_norm : False
+SOFTS_use_norm: False
 SOFTS_fc_dropout: 0.1
 
-
-=======
->>>>>>> 1276685 (26/08)
-#iTransformer 
-
+# iTransformer
 output_attention_itrans: false
 dropout_itrans: 0.5
 d_model_itrans: 128
-n_heads_itrans: 8 
+n_heads_itrans: 8
 d_ff_itrans: 1024
 e_layers_itrans: 4
-<<<<<<< HEAD
-
 iTransformer_num_variates: 32
-iTransformer_dim: 256                          # model dimensions
-iTransformer_depth: 2                          # depth
-iTransformer_heads: 8                          # attention heads
-iTransformer_dim_head: 64                      # head dimension
-iTransformer_pred_length: 1    # can be one prediction, or many
-iTransformer_num_tokens_per_variate: 1         # experimental setting that projects each variate to more than one token. the idea is that the network can learn to divide up into time tokens for more granular attention across time. thanks to flash attention, you should be able to accommodate long sequence lengths just fine
-iTransformer_use_reversible_instance_norm: True # use reversible instance normalization, proposed here https://openreview.net/forum?id=cGDAkQo1C0p . may be redundant given the layernorms within iTransformer (and whatever else attention learns emergently on the first layer, prior to the first layernorm). if i come across some time, i'll gather up all the statistics across variates, project them, and condition the transformer a bit further. that makes more sense
+iTransformer_dim: 256
+iTransformer_depth: 2
+iTransformer_heads: 8
+iTransformer_dim_head: 64
+iTransformer_pred_length: 1
+iTransformer_num_tokens_per_variate: 1
+iTransformer_use_reversible_instance_norm: True
 iTransformer_num_time_tokens: 4
-=======
->>>>>>> 1276685 (26/08)
 
-#for PatchTST
+# PatchTST
 kernel_PatchTST: 25
 stride: 2
-patch_len : 8
-n_head_PatchTST : 8
-padding_patch : 'end' # default='end', help='None: None; end: padding on the end'
-encoder_layers : 2
-decoder_layers : 
+patch_len: 8
+n_head_PatchTST: 8
+padding_patch: 'end'
+encoder_layers: 2
 d_model: 128
-d_ff: 1024 # fullyconnected
-fc_dropout : 0.1
-head_dropout : 0.1
+d_ff: 1024
+fc_dropout: 0.1
+head_dropout: 0.1
 subtract_last: False
 decomposition: True
-revin: 1 #default=1, help='RevIN; True 1 False 0')
-affine : 0 #default=0, help='RevIN-affine; True 1 False 0')
+revin: 1
+affine: 0
 
-#paths
-train_data_path : ./data/new
-test_data_path : ./data/test
-
+# Paths
+train_data_path: './data/new'
+test_data_path: './data/test'
 data_path: None
-model_path: ./models/saved_models
-<<<<<<< HEAD
-best_model:  models/saved_models/TransformerModel_epoch_9_date_09_09_15_40.pt
-=======
-best_model: ./models/saved_models/good_runs/TransformerModel_epoch_1_date_12_08_08_52.pt
->>>>>>> 1276685 (26/08)
-result_path: ./test_results
+model_path: './models/saved_models'
+best_model: 'models/saved_models/TransformerModel_epoch_9_date_09_09_15_40.pt'
+result_path: './test_results'
 
-
-
-shuffle_train : true
+shuffle_train: true
 shuffle: False
 
-with_critic : False
-loss_func : RMSELoss
+# Additional options
+with_critic: False
+loss_func: 'RMSELoss'
 EMW_on_output: True
 wandb_on: false
 norm: 'std'
 subtract_bias: False
 norm_labels: True
-plot_data : False
-plot_pred : false
+plot_data: False
+plot_pred: false
 pre_trained: false
-with_velocity : false
-velocity_model : false
-# sequence : True
-
-...
+with_velocity: false
+velocity_model: false
