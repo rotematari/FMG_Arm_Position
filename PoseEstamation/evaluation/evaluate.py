@@ -82,7 +82,12 @@ def test_model(model, config ,
                 end_time = time.time()
                 total_time += (end_time - start_time)
                 total_loss += loss.item()
-
+                        # # Apply Savitzky-Golay Filter
+            # window_size = 50
+            # poly_order = 5
+            # predsToPlot = savgol_filter(predsToPlot,deriv=0, window_length=window_size, polyorder=poly_order,axis=0)
+            # firstOrder_derivative_predsToPlot = savgol_filter(predsToPlot,deriv=1,delta=30.0, window_length=window_size, polyorder=poly_order,axis=0)
+            # predsToPlot += firstOrder_derivative_predsToPlot*300 
             # save all preds and targets 
             save_to_csv(targetsToPlot)
             save_to_csv(predsToPlot,model_name=model.name)

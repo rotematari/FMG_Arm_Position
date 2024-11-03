@@ -21,7 +21,7 @@ import argparse
 import pandas as pd
 
 # from FMG_project.utils.utils import print_not_numeric_vals
-data_dir = r'data/new'
+data_dir = r'data/multi_user/eran'
 
 with open(r'config.yaml', 'r') as f:
     args = yaml.safe_load(f)
@@ -112,7 +112,7 @@ def write_line(f,marker_data,sesion_time_stamp,motive_matcher):
         locations[motive_matcher[marker_data[j][0]]].append(marker_data[j][1])
     # read serial line
     locations_string = ','.join(map(str,locations['shoulder'][0]+locations['elbow'][0]+locations['wrist'][0]))
-    if len(sensor_string.split(',')) == 33:
+    if len(sensor_string.split(',')) == 32:
         # sensor_string , marker_string , sesion_time_stamp
         f.write(f'{sensor_string}' + ',' + f'{locations_string}' +','+ f'{sesion_time_stamp}' + '\n')
 
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                         wrist: 'wrist',
                     }    
     sesion_time_stamp = t.strftime("%d_%b_%Y_%H_%M", t.gmtime())
-    file_name = sesion_time_stamp + '_test_time'+'.csv'
+    file_name = sesion_time_stamp + '_eran'+'.csv'
     NatNet = init_natnetClient()
     print(file_name)
     f = open(join(data_dir, file_name), "w")
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     t.sleep(10)
     marker_data = NatNet.rigidBodyList
     t_start = t.time()
-    num_of_sampls = 5000
+    num_of_sampls = 10000
     for i in range(num_of_sampls):
         
         marker_data = NatNet.rigidBodyList

@@ -30,7 +30,7 @@ void loop() {
     for (int i = 0; i < 16; i++) {
     selection(i);
     //delayMicroseconds(100); // Adjust as necessary
-    for (int j = 0; j < 3; j++) {
+    for (int j = 0; j < 2; j++) {
       if (analogRead(A[j])>100)
       {
 

@@ -101,40 +101,6 @@ def store_results(outputs, targets, all_outputs, all_targets):
         all_targets = targets_np
     else:
         all_targets = np.vstack((all_targets, targets_np))
-<<<<<<< HEAD
-=======
-
-    return all_outputs, all_targets
-
-# Example usage:
-# Assuming 'optimizer' is a PyTorch optimizer
-# base_lr = 0.01  # Minimum learning rate
-# max_lr = 0.1   # Maximum learning rate
-# step_size_up = 1000  # Number of training iterations for half a sinusoidal cycle
-# scheduler = SinusoidalLR(optimizer, base_lr, max_lr, step_size_up)
-# TODO: add time for iteration for the eval model 
-def train(config, train_loader, val_loader,model,data_processor, device='cpu',wandb_run=None,critic =None,modelV=None):
-    
-    # input_size = 9  # Number of features for each time step
-    # hidden_size = 128
-    # latent_size = 2
-    # # Initialize the VAE model
-    # vae = VAE(input_size, hidden_size, latent_size).to(device)
-    if config.velocity_model:
-        optimizer = Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
-        optimizerV = Adam(modelV.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
-    else:
-        optimizer = Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
-    
-    # VAE_optimizer = torch.optim.Adam(vae.parameters(), lr=1e-3)
-    # optimizer = RAdam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
-
-    # Check if the model is one of the specified types for custom learning rate scheduling
-    if config.use_schedualer:
-        if model.name in ["TransformerModel", "DecompTransformerModel", "PatchTST"]:
-            warmup_steps = config.warmup_steps
-            initial_lr = config.learning_rate  # Starting learning rate
->>>>>>> 1276685 (26/08)
 
     return all_outputs, all_targets
 
@@ -245,7 +211,6 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
                 # Store results
                 all_outputs, all_targets = store_results(outputs, targets, all_outputs, all_targets)
 
-<<<<<<< HEAD
 
             train_loss +=  loss.item()
             TSS_losses.append(TSS(targets.cpu().detach().numpy()))
@@ -269,24 +234,6 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
         # df_all_targets.to_csv('all_training_targets.csv', index=False)
 
         val_loss,val_critic_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error,R2_score = test_model(
-=======
-            train_loss +=  loss.item()
-            optimizer.step()
-            current_lr = optimizer.param_groups[0]['lr']
-            train_iterator.set_description(f"Epoch [{epoch}/{config.num_epochs}] Train Loss: {(train_loss/(i+1)):.4f} LR: {current_lr:.6f}")
-        
-        train_loss /= len(train_loader)
-        train_losses.append(train_loss)
-        # Convert results to a DataFrame
-        df_all_outputs = pd.DataFrame(all_outputs)
-        df_all_targets = pd.DataFrame(all_targets)
-
-        # Save DataFrame to a CSV file
-        df_all_outputs.to_csv('all_training_outputs.csv', index=False)
-        df_all_targets.to_csv('all_training_targets.csv', index=False)
-
-        val_loss,val_critic_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error = test_model(
->>>>>>> 1276685 (26/08)
             model=model,
             critic=critic,
             config=config,
@@ -299,11 +246,7 @@ def train(config, train_loader, val_loader,model,data_processor, device='cpu',wa
         )
 
 
-<<<<<<< HEAD
         print(f'Epoch: {epoch} Train Loss: {train_loss:.4f}  Val Loss: {val_loss:.4f} R2 {R2_score:.4f} \n Avarege Euclidian End Effector Error: {avg_euc_end_effector_error} Max Euclidian End Effector Error:{max_euc_end_effector_error} time for one iteration {1000*avg_iter_time:.4f} ms \n ----------')
-=======
-        print(f'Epoch: {epoch} Train Loss: {train_loss}  Val Loss: {val_loss} \n Avarege Euclidian End Effector Error: {avg_euc_end_effector_error} Max Euclidian End Effector Error:{max_euc_end_effector_error} time for one iteration {1000*avg_iter_time:.4f} ms \n ----------')
->>>>>>> 1276685 (26/08)
         # Save the validation loss 
         val_losses.append(val_loss)
         
@@ -577,36 +520,11 @@ def test_model(model, config ,
                     outputs_loc, outputs_V = model(inputs)
                     outputs_loc = outputs_loc[:,-1,:]
                     outputs_V = outputs_V[:,-1,:]
-<<<<<<< HEAD
                     targets_loc = targets[:,-1,:9]
                     targets_V = targets[:,-1,9:]
                     loss_loc = criterion(outputs_loc, targets_loc)
                     loss_v = criterion(outputs_V, targets_V)
                     loss = loss_loc + loss_v
-=======
-                else:
-                    outputs = model(inputs)
-                    outputs = outputs[:,-1,:]
-                
-                if config.velocity_model:
-                    targets_loc = targets[:,-1,:9]
-                    targets_V = targets[:,-1,9:]
-                else:
-                    targets = targets[:,-1,:]
-
-                if config.velocity_model:
-                    loss_loc = criterion(outputs_loc, targets_loc)
-                    loss_v = criterion(outputs_V, targets_V)
-                    loss = loss_loc + loss_v
-                else:
-                    loss = criterion(outputs, targets)
-                
-                # outputs,_,_ = vae(outputs)
-                # outputs = outputs[:,-1,:]
-                # targets = targets[:,-1,:]
-                if config.velocity_model:
-
->>>>>>> 1276685 (26/08)
                     outputs_loc = outputs_loc.cpu().detach().numpy()
                     targets_loc = targets_loc.cpu().detach().numpy()
                     outputs_V = outputs_V.cpu().detach().numpy()
@@ -614,7 +532,6 @@ def test_model(model, config ,
                     
                     outputs = np.concatenate([outputs_loc,outputs_V],axis=1)
                     targets = np.concatenate([targets_loc,targets_V],axis=1)
-<<<<<<< HEAD
                 else:
                     outputs = model(inputs)
                     outputs = outputs[:,-1,:]
@@ -624,12 +541,6 @@ def test_model(model, config ,
                     targets = targets.cpu().detach().numpy()
                     TSS_losses.append(TSS(targets))
                     RSS_losses.append(RSS(targets,outputs))
-=======
-
-                else:
-                    outputs = outputs.cpu().detach().numpy()
-                    targets = targets.cpu().detach().numpy()
->>>>>>> 1276685 (26/08)
 
 
                 if config.norm_labels:
@@ -640,11 +551,6 @@ def test_model(model, config ,
                     unnorm_outputs = outputs
                     unnorm_targets = targets
                 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 1276685 (26/08)
                 location_error = (np.abs(unnorm_outputs - unnorm_targets).sum(axis=0))/inputs.size(0)
                 
                 if i == 0:
@@ -666,15 +572,10 @@ def test_model(model, config ,
                 sum_location_error += location_error
 
             # # Apply Savitzky-Golay Filter
-            window_size = 100
+            window_size = 500
             poly_order = 5
-<<<<<<< HEAD
             # predsToPlot = savgol_filter(predsToPlot,deriv=0, window_length=window_size, polyorder=poly_order,axis=0)
             # firstOrder_derivative_predsToPlot = savgol_filter(predsToPlot,deriv=1,delta=30.0, window_length=window_size, polyorder=poly_order,axis=0)
-=======
-            predsToPlot = savgol_filter(predsToPlot,deriv=0, window_length=window_size, polyorder=poly_order,axis=0)
-            firstOrder_derivative_predsToPlot = savgol_filter(predsToPlot,deriv=1,delta=30.0, window_length=window_size, polyorder=poly_order,axis=0)
->>>>>>> 1276685 (26/08)
             # predsToPlot += firstOrder_derivative_predsToPlot*200 
 
             # Reshape the arrays to separate the coordinates of each point
@@ -772,116 +673,6 @@ def test_model(model, config ,
         return avg_loss,avg_critic_loss,avg_iter_time, avg_location_error,avg_euc_end_effector_error,max_euc_end_effector_error,R2_score
 
 
-<<<<<<< HEAD
-=======
-# def test_model(model, config, data_loader, data_processor, device='cpu', make_pdf=False, epoch=0, task='train', critic=None, modelV=None):
-#     criterion = MSELoss() if config.loss_func == 'MSELoss' else RMSELoss()
-#     total_loss = 0
-#     total_time = 0
-#     sum_location_error = 0
-
-#     with torch.no_grad():
-#         model.eval()
-#         if config.velocity_model:
-#             modelV.eval()
-        
-#         test_iterator = tqdm(enumerate(data_loader), total=len(data_loader), desc="Test")
-#         for i, (inputs, targets, time_feature) in test_iterator:
-#             inputs = inputs.to(device=device)
-#             targets = targets.to(device=device)
-#             time_feature = time_feature.cpu().detach().numpy()
-            
-#             start_time = time.time()
-
-#             if config.velocity_model:
-#                 outputs_loc = model(inputs)[:, -1, :]
-#                 outputs_V = modelV(inputs)[:, -1, :]
-#                 targets_loc = targets[:, -1, :9]
-#                 targets_V = targets[:, -1, 9:]
-#                 loss_loc = criterion(outputs_loc, targets_loc)
-#                 loss_v = criterion(outputs_V, targets_V)
-#                 loss = loss_loc + loss_v
-#                 outputs_loc = outputs_loc.cpu().detach().numpy()
-#                 outputs_V = outputs_V.cpu().detach().numpy()
-#                 targets_loc = targets_loc.cpu().detach().numpy()
-#                 targets_V = targets_V.cpu().detach().numpy()
-#                 outputs = np.concatenate([outputs_loc, outputs_V], axis=1)
-#                 targets = np.concatenate([targets_loc, targets_V], axis=1)
-#             else:
-#                 outputs = model(inputs)[:, -1, :]
-#                 targets = targets[:, -1, :]
-#                 loss = criterion(outputs, targets)
-#                 outputs = outputs.cpu().detach().numpy()
-#                 targets = targets.cpu().detach().numpy()
-
-#             if config.norm_labels:
-#                 unnorm_outputs = data_processor.label_scaler.inverse_transform(outputs)
-#                 unnorm_targets = data_processor.label_scaler.inverse_transform(targets)
-#             else:
-#                 unnorm_outputs = outputs
-#                 unnorm_targets = targets
-
-#             location_error = (np.abs(unnorm_outputs - unnorm_targets).sum(axis=0)) / inputs.size(0)
-            
-#             if i == 0:
-#                 predsToPlot = unnorm_outputs
-#                 targetsToPlot = unnorm_targets
-#                 time_featureToPlot = time_feature
-#                 inputsToSave = inputs.cpu().detach().numpy()
-#             else:
-#                 predsToPlot = np.concatenate((predsToPlot, unnorm_outputs))
-#                 targetsToPlot = np.concatenate((targetsToPlot, unnorm_targets))
-#                 time_featureToPlot = np.concatenate((time_featureToPlot, time_feature))
-#                 inputsToSave = np.concatenate((inputsToSave, inputs.cpu().detach().numpy()))
-
-#             end_time = time.time()
-#             total_time += (end_time - start_time)
-#             total_loss += loss.item()
-#             sum_location_error += location_error
-
-#         # Apply Savitzky-Golay Filter
-#         window_size = 300
-#         poly_order = 5
-#         predsToPlot = savgol_filter(predsToPlot, window_length=window_size, polyorder=poly_order, axis=0)
-
-#         # Reshape the arrays to separate the coordinates of each point
-#         true_reshaped = targetsToPlot.reshape(-1, 6 if config.velocity_model else 3, 3)
-#         pred_reshaped = predsToPlot.reshape(-1, 6 if config.velocity_model else 3, 3)
-
-#         # Calculate the Euclidean distance for each corresponding point
-#         distances = np.linalg.norm(true_reshaped - pred_reshaped, axis=2)
-
-#         # Calculate the mean error
-#         mean_error = np.mean(distances, axis=0)
-
-#         avg_loss = total_loss / len(data_loader)
-#         avg_iter_time = total_time / len(data_loader)
-#         avg_location_error = sum_location_error / len(data_loader)
-
-#         title = (f"Model: {model.name}, Task: {task}\n "
-#                 f"RMSE Avg Loss: {avg_loss}\n "
-#                 f"Avg Iter Time: {avg_iter_time}\n "
-#                 f"Avg Euclidean wrist Error: {mean_error[-1]}\n"
-#                 f"Avg Euclidean Elbow Error: {mean_error[1]}\n"
-#                 f"Avg Euclidean Shoulder Error: {mean_error[0]}\n"
-#                 f"Max Euclidean End Effector Error: {distances.max()}\n")
-
-#         if not make_pdf:
-#             plot_results(config, targetsToPlot, predsToPlot)
-#             save_results(config, model, task, epoch, title, dir_path='./results/')
-
-#     avg_euc_end_effector_error = mean_error[-1]
-#     max_euc_end_effector_error = distances.max()
-    
-#     return {
-#         'val_loss': avg_loss,
-#         'avg_iter_time': avg_iter_time,
-#         'avg_location_error': avg_location_error,
-#         'avg_euc_end_effector_error': avg_euc_end_effector_error,
-#         'max_euc_end_effector_error': max_euc_end_effector_error
-#     }
-
->>>>>>> 1276685 (26/08)
 def plot_results(config, targetsToPlot, predsToPlot):
     if config.num_labels > 3:
         if config.velocity_model:
@@ -1341,11 +1132,7 @@ def create_sliding_sequences(input_array, sequence_length):
     sample_size, features = input_array.shape
     sequences = []
     sampled_array = []
-<<<<<<< HEAD
     step_size = 32
-=======
-    step_size = 1
->>>>>>> 1276685 (26/08)
     i = 0
     jump = 2
     j = 0
