@@ -202,7 +202,11 @@ class CNNLSTMModel(nn.Module):
         x = self.dropout(x)
         x = self.fully_connected(x)
 
-        return x
+        
+        elbow = x[:,:3]
+        wrist = x[:,3:]
+        fmg = 0 
+        return elbow,wrist,fmg
 
 
 class CNN1D(nn.Module):
@@ -267,7 +271,10 @@ class CNN1D(nn.Module):
         x = x.view(x.size(0), -1)  # Flatten
         x = self.dropout(x)
         x = self.fc(x)
-        return x
+        elbow = x[:,:3]
+        wrist = x[:,3:]
+        fmg = 0 
+        return elbow,wrist,fmg
 
 
 
@@ -300,8 +307,12 @@ class FullyConnectedNetwork(nn.Module):
         # input [batch,sequence,featurs]
         batch_size = x.size(0)
         x = x.view(batch_size, -1) #[batch,sequence*featurs]
-
-        return self.network(x)
+        x = self.network(x)
+        
+        elbow = x[:,:3]
+        wrist = x[:,3:]
+        fmg = 0 
+        return elbow,wrist,fmg
 
 class TransformerModel(nn.Module):
     def __init__(self, config):
@@ -468,69 +479,6 @@ class LearnablePositionalEncoding(nn.Module):
         x = x + self.positional_encoding[:, :x.size(1), :]
         return self.dropout(x)
 
-
-# class TransformerModel(nn.Module):
-#     def __init__(self, config):
-#         super(TransformerModel, self).__init__()
-#         self.name = "TransformerModel"
-#         self.config = config
-
-#         input_size, d_model, num_layers, output_size, fc_dropout,d_ff_transformer, n_head,head_dropout= (
-#             config.input_size,
-#             config.d_model_transformer,
-#             config.num_layers_transformer,
-#             config.num_labels,
-#             config.fc_dropout_transformer,
-#             config.d_ff_transformer,
-#             config.transformer_n_head,
-#             config.head_dropout_transformer
-#         )
-#         self.temporal = True
-
-#         if d_model % n_head != 0:
-#             d_model = (d_model // n_head) * n_head
-
-#         self.embedding = nn.Linear(input_size, d_model)
-
-#         # Positional encoding: Input shape: [batch_size, seq_length, d_model]
-#         self.positional_encoding = PositionalEncoding(self.config.d_model_transformer, self.config.dropout)
-
-#         self.transformer_encoder = nn.TransformerEncoder(
-#             nn.TransformerEncoderLayer(d_model=d_model, nhead=n_head,
-#                                     dim_feedforward=d_ff_transformer,activation=F.gelu, batch_first=True,
-#                                     dropout=head_dropout),
-#             num_layers=num_layers
-#         )
-
-#         fully_connected = []
-#         current_size = d_model
-#         while current_size//2 > output_size*2 :
-#             d_model = current_size//2
-#             fully_connected.append(nn.Linear(current_size, d_model))
-#             fully_connected.append(nn.ReLU())
-#             fully_connected.append(nn.Dropout(fc_dropout))
-
-#             current_size = d_model
-        
-#         fully_connected.append(nn.Linear(current_size, output_size))
-#         self.fully_connected = nn.Sequential(*fully_connected)
-
-#         self.fc_sum =  nn.Linear(self.config.sequence_length, 1) 
-
-#     def forward(self, x, mask=None):
-
-#         x = self.embedding(x) * math.sqrt(self.config.d_model_transformer)
-
-#         x = self.positional_encoding(x)
-
-#         x = self.transformer_encoder(x,mask=mask)
-
-#         x = self.fully_connected(x) # B, 
-#         x = x.permute(0,2,1)
-#         x = self.fc_sum(x)
-#         x = x.permute(0,2,1) # [batch,1,output=9]
-#         return x
-
 class moving_avg(nn.Module):
     """
     Moving average block to highlight the trend of time series
@@ -610,7 +558,9 @@ class DLinear(nn.Module):
         self.decompsition = series_decomp(configs["Dlinear_kernel_size"])
         self.individual = configs["individual"]
         self.channels = configs["input_size"]
-        self.channels_out = configs["output_size"]
+        # self.channels_out = configs["output_size"]
+        self.channels_out = 9
+
 
         if self.individual:
             self.Linear_Seasonal = nn.ModuleList()
@@ -653,7 +603,12 @@ class DLinear(nn.Module):
 
         x = x.permute(0,2,1) # to [Batch,sequence_length, Channel]
 
-        return self.fc_projection(x)[:,-1,:] 
+        x = self.fc_projection(x)[:,-1,:]
+        
+        elbow = x[:,3:6]
+        wrist = x[:,6:]
+        fmg = 0 
+        return elbow,wrist,fmg
 
 
 class Conv2DLSTMAttentionModel(nn.Module):

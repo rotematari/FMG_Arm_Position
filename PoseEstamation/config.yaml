@@ -16,7 +16,7 @@ seed: 42
 epochs: 15
 batch_size: 32 # 40
 train_data_path: "/home/robotics20/FMG_Arm_Position/PoseEstamation/data/full_data"      # Directory containing CSV files
-test_data_path: "/home/robotics20/FMG_Arm_Position/PoseEstamation/data/multi_user/eran" 
+test_data_path: "/home/robotics20/FMG_Arm_Position/PoseEstamation/data/test_data" 
 model_path: "results/saved_models"
 data_test_path: "data_tests_results"
 num_of_data_sets_experiments: 15
