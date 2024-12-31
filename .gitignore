@@ -1,6 +1,5 @@
 
-*.pt
-*.pth
+
 *.zip
 # FMG_project.zip
 Rotem_model/wandb/
@@ -8,8 +7,6 @@ Rotem_model/wandb/
 .vscode/
 .vscode/settings.json
 *.mp4
-*.pdf
-*.txt
 *.pyc
 *.cpython-311.pyc
 .vscode/
@@ -27,3 +24,6 @@ trajectory_model/data/
 trajectory_model/results/
 PoseEstamation/results/saved_predictions/
 venv/
+PoseEstamation/results/results
+PoseEstamation/results/saved_models/
+PoseEstamation/results/experiments
