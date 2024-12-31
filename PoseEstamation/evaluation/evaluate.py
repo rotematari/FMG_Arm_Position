@@ -155,7 +155,12 @@ def plot_and_save_results(config, targetsToPlot, predsToPlot, task, title="",epo
     - title: Title for the plot and accompanying text file.
     """
     
-    legends = config["label_index"]  # e.g., ['MEx', 'MEY', ...]
+    legends = [
+       # 'MCx','MCy', 'MCz',
+       # 'MSx', 'MSy', 'MSz',
+       'MEx', 'MEy', 'MEz',
+       'MWx', 'MWy', 'MWz'
+]       # e.g., ['MEx', 'MEY', ...]
     
     for i in range(6):
         plt.subplot(6, 1, i + 1)

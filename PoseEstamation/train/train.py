@@ -89,7 +89,7 @@ def train(config,model,optimizer, train_loader,val_loader ,label_scaler,feature_
     best_val_loss = 10
     best_wrist_error = 30
     print("training starts")
-    train_unsupervised(config=config,model=model,optimizer=optimizer,train_loader=train_loader,device=device)
+    # train_unsupervised(config=config,model=model,optimizer=optimizer,train_loader=train_loader,device=device)
     for epoch in range(num_epochs):
         # Initialize the epoch loss and accuracy
         train_loss = 0

@@ -26,15 +26,13 @@ if __name__ == '__main__':
 
     search_space = {
         "name": "TransformerModel",
-        "dropout": tune.uniform(0.0, 0.3),
-        "head_dropout_transformer": tune.uniform(0.0, 0.3),
-        "fc_dropout_transformer": tune.uniform(0.0, 0.3), 
-        "learning_rate": tune.uniform(1e-6, 1e-4),
-        "weight_decay": tune.uniform(1e-6, 1e-4),
-        "warmup_length": tune.uniform(0.05, 0.4),
+        "dropout": tune.uniform(0.09, 0.2),
+        "learning_rate": tune.uniform(1e-4, 1e-2),
+        "weight_decay": tune.uniform(1e-4, 1e-2),
+        "warmup_length": tune.uniform(0.3, 0.4),
         "batch_size": tune.choice([32]),
-        "sequence_length": tune.choice([128, 256]),
-        "epochs": 20,
+        "sequence_length": tune.choice([128]),
+        "epochs": 15,
     }
 
 
@@ -63,7 +61,7 @@ if __name__ == '__main__':
         tune.with_parameters(train_model, my_config=my_config,device=device),
         resources_per_trial={"cpu": 20, "gpu": int(torch.cuda.is_available())},
         config=search_space,
-        num_samples=100,  # Number of hyperparameter configurations to try
+        num_samples=50,  # Number of hyperparameter configurations to try
         scheduler=scheduler,
         progress_reporter=reporter,
         raise_on_failed_trial=False  # Add this parameter

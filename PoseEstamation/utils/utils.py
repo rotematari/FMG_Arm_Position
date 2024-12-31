@@ -14,7 +14,7 @@ def set_device():
         print("Running on CPU")
     return device
 
-def set_seed(seed, torch_deterministic=False, rank=0):
+def set_seed(seed, torch_deterministic=True, rank=0):
     """ set seed across modules """
     if seed == -1 and torch_deterministic:
         seed = 42 + rank
