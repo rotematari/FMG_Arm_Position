@@ -1,5 +1,6 @@
 
 *.pt
+*.pth
 *.zip
 # FMG_project.zip
 Rotem_model/wandb/
@@ -25,3 +26,4 @@ Rotem_model/data/
 trajectory_model/data/
 trajectory_model/results/
 PoseEstamation/results/saved_predictions/
+venv/

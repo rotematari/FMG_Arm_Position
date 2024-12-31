@@ -1,22 +1,22 @@
 # general
 model: "TransformerModel" 
 # options "FullyConnectedNetwork",CNN1D,DLinear,TransformerModel,Conv2DLSTMAttentionModel,CNNLSTMModel
-pre_trained: true 
-pre_trained_path: 'results/TransformerModel/best/TransformerModel_epoch_9_date_07_10_11_36.pt'
+pre_trained: True 
+pre_trained_path: 'results/saved_models/TransformerModel_epoch_8_date_25_12_09_36.pt'
 input_size: 32
 output_size: 6
 
-learning_rate: 0.005 # 9.0e-04
-weight_decay : 3.00e-05 # 2.0e-03
-warmup_length : 0.3
+learning_rate: 0.00332 # 9.0e-04
+weight_decay : 0.00749 # 2.0e-03
+warmup_length : 0.365
 sequence_length: 128 # 128               # Number of steps in each sequence
-dropout: 0.1 # 0.2
+dropout: 0.116 # 0.2
 
 seed: 42
 epochs: 15
 batch_size: 32 # 40
-train_data_path: "/home/robotics20/FMG_Arm_Position/PoseEstamation/data/full_data"      # Directory containing CSV files
-test_data_path: "/home/robotics20/FMG_Arm_Position/PoseEstamation/data/test_data" 
+train_data_path: "/home/admina/pose_estamation/PoseEstamation/data/full_data"      # Directory containing CSV files
+test_data_path: "/home/admina/pose_estamation/PoseEstamation/data/test_data" 
 model_path: "results/saved_models"
 data_test_path: "data_tests_results"
 num_of_data_sets_experiments: 15
@@ -87,4 +87,26 @@ label_index: [
        # 'MSx', 'MSy', 'MSz',
        'MEx', 'MEy', 'MEz',
        'MWx', 'MWy', 'MWz'
-]        
+]
+
+# Fine-tuning parameters
+fine_tuning:
+       model: "TransformerModel_fine_tune_avishai"
+       pre_trained_model_path: "results/saved_models/TransformerModel_epoch_8_date_25_12_09_36.pt"
+       enabled: false
+       learning_rate: 1.0e-5 
+       weight_decay: 1.0e-3
+       num_epochs: 5
+       batch_size: 32
+       criterion: "MSELoss"
+       model_save_path: "fine_tuned_model.pth"
+       train_data_path: "data/multi_user/avishai/fine_tune"
+       test_data_path: "data/multi_user/avishai/test"
+       layers_to_train: [
+       #      'wrist_fc.2',
+       #      'wrist_fc.5',
+            'wrist_fc_sum',
+       #      'elbow_fc.2', 
+       #      'elbow_fc.5',
+            'elbow_fc_sum'
+        ]

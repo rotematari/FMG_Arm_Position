@@ -20,6 +20,9 @@ class FMGPoseDataset(Dataset):
         elif mode == "test":
             self.feature_scalar = feature_scalar
             self.label_scalar = label_scalar
+        elif mode == "fine_tune":
+            self.feature_scalar = feature_scalar
+            self.label_scalar = label_scalar
 
         self.data = self.preprocess()
 
@@ -55,8 +58,13 @@ class FMGPoseDataset(Dataset):
         """
         if self.mode == "train":
             data_path = self.config["train_data_path"]
+        elif self.mode == "fine_tune":
+            data_path = self.config["fine_tuning"]["train_data_path"]
+        elif self.mode == "test_fine_tune":
+            data_path = self.config["fine_tuning"]["test_data_path"]
         else:
             data_path = self.config["test_data_path"]
+
         
         feature_index = self.config["feature_index"]
         label_index = self.config["label_index"]

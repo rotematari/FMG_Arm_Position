@@ -425,30 +425,25 @@ class TransformerModel(nn.Module):
         # Transformer encoder
         x = self.transformer_encoder(x, mask=mask)
 
+        # Process FMG data
         fmg = self.unsupervised_fc(x)
 
-        elbow = self.elbow_fc(x)
-        wrist = self.wrist_fc(x)
 
-        # Reshape and sum over sequence length
+        # Process elbow predictions
+        elbow = self.elbow_fc(x)
         elbow = elbow.permute(0, 2, 1)
         elbow = self.elbow_fc_sum(elbow)
-        elbow = elbow.permute(0, 2, 1)  # Output: [batch, 1, output_size]
+        elbow = elbow.permute(0, 2, 1)
         elbow = elbow[:,-1,:]
-        # Reshape and sum over sequence length
+
+        # Process wrist predictions
+        wrist = self.wrist_fc(x)
         wrist = wrist.permute(0, 2, 1)
         wrist = self.wrist_fc_sum(wrist)
-        wrist = wrist.permute(0, 2, 1)  # Output: [batch, 1, output_size]
+        wrist = wrist.permute(0, 2, 1)
         wrist = wrist[:,-1,:]
-        # # Fully connected layers
-        # x = self.fully_connected(x)
 
-        # # Reshape and sum over sequence length
-        # x = x.permute(0, 2, 1)
-        # x = self.fc_sum(x)
-        # x = x.permute(0, 2, 1)  # Output: [batch, 1, output_size]
-        # x = x[:,-1,:]
-        return elbow,wrist,fmg
+        return elbow, wrist, fmg
 
 class PositionalEncoding(nn.Module):
     """Fixed sinusoidal positional encoding for transformer models."""
