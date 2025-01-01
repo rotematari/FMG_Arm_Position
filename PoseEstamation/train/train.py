@@ -161,7 +161,7 @@ def train(config,model,optimizer, train_loader,val_loader ,label_scaler,feature_
             best_wrist_error = avg_euc_end_effector_error
             # best_val_loss = val_loss
             time_stamp = time.strftime("%d_%m_%H_%M", time.gmtime())
-            filename = model.name + '_epoch_' +str(epoch)+'_date_'+time_stamp + '.pt'
+            filename = config["experiment_name"] + model.name + '_epoch_' +str(epoch)+'_date_'+time_stamp + '.pt'
             best_model_checkpoint_path = join(config["model_path"],filename)
             best_model_checkpoint = {
                 'epoch': epoch,

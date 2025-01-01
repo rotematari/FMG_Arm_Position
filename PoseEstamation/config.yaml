@@ -1,8 +1,9 @@
 # general
 model: "TransformerModel" 
 # options "FullyConnectedNetwork",CNN1D,DLinear,TransformerModel,Conv2DLSTMAttentionModel,CNNLSTMModel
+experiment_name: "multi_user_avishai_ZS_"
 pre_trained: True 
-pre_trained_path: 'results/saved_models/TransformerModel_epoch_8_date_25_12_09_36.pt'
+pre_trained_path: 'results/best/Transformer_normal/TransformerModel_epoch_8_date_25_12_09_36.pt'
 input_size: 32
 output_size: 6
 
@@ -16,7 +17,9 @@ seed: 42
 epochs: 15
 batch_size: 32 # 40
 train_data_path: "/home/admina/pose_estamation/PoseEstamation/data/full_data"      # Directory containing CSV files
-test_data_path: "/home/admina/pose_estamation/PoseEstamation/data/test_data" 
+# test_data_path: "/home/admina/pose_estamation/PoseEstamation/data/test_data" 
+test_data_path: "/home/admina/pose_estamation/PoseEstamation/data/multi_user/avishai/test" 
+
 model_path: "results/saved_models"
 data_test_path: "data_tests_results"
 num_of_data_sets_experiments: 15
@@ -91,8 +94,8 @@ label_index: [
 
 # Fine-tuning parameters
 fine_tuning:
-       model: "TransformerModel_fine_tune_avishai"
-       pre_trained_model_path: "results/saved_models/TransformerModel_epoch_8_date_25_12_09_36.pt"
+       model: "TransformerModel_fine_tune_eden"
+       pre_trained_model_path: "results/best/Transformer_normal/TransformerModel_epoch_8_date_25_12_09_36.pt"
        enabled: false
        learning_rate: 1.0e-5 
        weight_decay: 1.0e-3
@@ -100,8 +103,8 @@ fine_tuning:
        batch_size: 32
        criterion: "MSELoss"
        model_save_path: "fine_tuned_model.pth"
-       train_data_path: "data/multi_user/avishai/fine_tune"
-       test_data_path: "data/multi_user/avishai/test"
+       train_data_path: "data/multi_user/eden/fine_tune"
+       test_data_path: "data/multi_user/eden/test"
        layers_to_train: [
        #      'wrist_fc.2',
        #      'wrist_fc.5',

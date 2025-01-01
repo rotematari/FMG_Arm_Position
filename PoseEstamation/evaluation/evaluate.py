@@ -171,7 +171,7 @@ def plot_and_save_results(config, targetsToPlot, predsToPlot, task, title="",epo
         dir_path = './' + config["data_test_path"] + '/' + str(number_of_data_samples) + '_data_sample/ex_' + str(experiment)
     else:
         # Directory path for saving results
-        dir_path = './results/' + config["model"]
+        dir_path = './results/' + config["experiment_name"] + config["model"]
 
     # Create directory if it doesn't exist
     if not os.path.exists(dir_path):

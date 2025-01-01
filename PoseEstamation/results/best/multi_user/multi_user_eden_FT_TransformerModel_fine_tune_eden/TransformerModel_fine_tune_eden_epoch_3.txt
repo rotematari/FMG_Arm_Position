@@ -1,0 +1,11 @@
+RMSE Avg Loss: 0.91016
+Avg Iter Time: 0.0069
+Avg Euclidean Wrist Error: 0.2433999925851822
+Euclidean Wrist STD: 0.08938000351190567
+Avg Euclidean Elbow Error: 0.14443999528884888
+Euclidean Elbow STD: 0.052379999309778214
+Max Euclidean End Effector Error: 0.483379989862442
+Avg Location Error: [0.09051249 0.05326951 0.07550453 0.11725608 0.1314149  0.12844022]
+R² Score: -0.13805000483989716
+
+{'model': 'TransformerModel_fine_tune_eden', 'pre_trained_model_path': 'results/best/Transformer_normal/TransformerModel_epoch_8_date_25_12_09_36.pt', 'enabled': False, 'learning_rate': 1e-05, 'weight_decay': 0.001, 'num_epochs': 5, 'batch_size': 32, 'criterion': 'MSELoss', 'model_save_path': 'fine_tuned_model.pth', 'train_data_path': 'data/multi_user/eden/fine_tune', 'test_data_path': 'data/multi_user/eden/test', 'layers_to_train': ['wrist_fc_sum', 'elbow_fc_sum'], 'experiment_name': 'multi_user_eden_FT_'}

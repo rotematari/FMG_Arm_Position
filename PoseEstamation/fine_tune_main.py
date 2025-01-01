@@ -13,6 +13,7 @@ from datetime import datetime
 class FineTuner:
     def __init__(self, model, config):
         self.config = config.get('fine_tuning', {})
+        self.config["experiment_name"] = config["experiment_name"]
         self.model = model
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
@@ -75,18 +76,19 @@ class FineTuner:
             max_euc_end_effector_error,R2_score,\
             avg_elbow_error,wrist_std,elbow_std = self.validate(val_loader,label_scaler,epoch)
             
+
+            print(f'Wrist AVG Error: {avg_euc_end_effector_error:.4f}')
+            print(f'Wrist Standard Deviation: {wrist_std:.4f}')
+            print(f'Maximum Wrist Error: {max_euc_end_effector_error:.4f}')
+            print(f'Average Elbow Error: {avg_elbow_error:.4f}')
+            print(f'Elbow Standard Deviation: {elbow_std:.4f}')
+            print(f'R2 Score: {R2_score:.4f}')
             print(f'Fine-tuning Epoch {epoch+1}/{num_epochs}:')
             print(f'Training Loss: {train_loss:.4f}')
             print(f'Validation Loss: {val_loss:.4f}')
-            print(f'Average Critic Loss: {avg_critic_loss:.4f}')
             print(f'Average Iteration Time: {avg_iter_time:.4f}')
             print(f'Average Location Error: {avg_location_error}')
-            print(f'Average Euclidean End-Effector Error: {avg_euc_end_effector_error:.4f}')
-            print(f'Maximum Euclidean End-Effector Error: {max_euc_end_effector_error:.4f}')
-            print(f'R2 Score: {R2_score:.4f}')
-            print(f'Average Elbow Error: {avg_elbow_error:.4f}')
-            print(f'Wrist Standard Deviation: {wrist_std:.4f}')
-            print(f'Elbow Standard Deviation: {elbow_std:.4f}')
+
             
             if val_loss < best_val_loss:
                 best_val_loss = val_loss

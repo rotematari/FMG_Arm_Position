@@ -3,11 +3,10 @@ import torch
 from torch.nn.utils import weight_norm
 import torch.nn.functional as F
 import numpy as np
-from pytorch_tcn import TCN
 import math 
-from iTransformer import iTransformer,iTransformer2D
-import math
-from iTransformer import iTransformer, iTransformer2D
+# from pytorch_tcn import TCN
+# from iTransformer import iTransformer,iTransformer2D
+
 
 class iTransformerModel(nn.Module):
     def __init__(self, config):
@@ -335,7 +334,7 @@ class TransformerModel(nn.Module):
         # Ensure d_model is divisible by n_head
         if d_model % n_head != 0:
             d_model = (d_model // n_head) * n_head
-
+        
         self.temporal = True
 
         # Embedding layer

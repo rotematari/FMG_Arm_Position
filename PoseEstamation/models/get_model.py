@@ -18,7 +18,6 @@ def get_model(config):
         model = DLinear(config)
     elif config["model"] == 'CNNLSTMModel':
         model = CNNLSTMModel(config)
-
     # Load the pre-trained model if specified
     if config.get("pre_trained", False):  # Check if pre_trained key exists and is True
         checkpoint_path = config["pre_trained_path"]  # Path to the checkpoint

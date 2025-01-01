@@ -1,5 +1,4 @@
 
-
 *.zip
 # FMG_project.zip
 Rotem_model/wandb/
@@ -27,3 +26,4 @@ venv/
 PoseEstamation/results/results
 PoseEstamation/results/saved_models/
 PoseEstamation/results/experiments
+PoseEstamation/results/fearute_importance_TransformerModel
