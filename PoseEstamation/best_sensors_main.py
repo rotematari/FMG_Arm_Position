@@ -8,14 +8,22 @@ from evaluation.evaluate import test_model
 from models.get_model import get_model
 import numpy as np
 
-def main(score=3.0):
-        # Load the config file
+def main(score_config=None,score=None):
+    #                     "dropout": 0.12555232252228307,
+    #                     "learning_rate": 0.005236027155259325,
+    #                     "weight_decay": 0.007059887693062261,
+    #                     "warmup_length": 0.3363629602379294
+    # Load the config file
     config = load_yaml_config('config.yaml')
-
-    feature_impotance_scores = [1.39, 4.93, 12.82, 0.99, 3.37, 7.88, 0.5, 5.88,
-                                9.52, 4.94, 0.89, 1.25, 0.07, 0.01, 0.66, 1.58, 
-                                0.99, 2.36, 1.63, 6.49, 8.23, 1.07, 0.94, 4.65,
-                                0.62, 1.18, 1.07, 1.16, 1.11, 0.91, 0.49, 13.35]
+    # config["dropout"] = score_config["dropout"]
+    # config["learning_rate"] = score_config["learning_rate"]
+    # config["weight_decay"] = score_config["weight_decay"]
+    # config["warmup_length"] = score_config["warmup_length"]
+    config["dropout"] = 0.125
+    config["learning_rate"] = 0.0052
+    config["weight_decay"] = 0.007
+    config["warmup_length"] = 0.336
+    config["experiment_name"] = f"best_sensors_{score}_"
     
     feature_impotance_scores_dict ={
         1: 1.39, 2: 4.93, 3: 12.82, 4: 0.99, 5: 3.37, 6: 7.88, 7: 0.5, 8: 5.88,
@@ -86,4 +94,33 @@ def main(score=3.0):
 
 
 if __name__ == '__main__':
-    main()
+    # score_config = {0.5:{   
+    #                     "dropout": 0.12555232252228307,
+    #                     "learning_rate": 0.005236027155259325,
+    #                     "weight_decay": 0.007059887693062261,
+    #                     "warmup_length": 0.3363629602379294,},
+    #             1.0:{   
+    #                     "dropout": 0.1359152103463657,
+    #                     "learning_rate": 0.0022988673236602293,
+    #                     "weight_decay": 0.00128666713660346,
+    #                     "warmup_length": 0.3337615171403628,},
+    #             1.5:{        
+    #                 "dropout": 0.1284130532073927,
+    #                 "learning_rate": 0.007286961220815371,
+    #                 "weight_decay": 0.008981391573530513,
+    #                 "warmup_length": 0.38870864242651176,},
+    #             2.0:{       
+    #                 "dropout": 0.12577016542294217,
+    #                 "learning_rate": 0.007323101165546835,
+    #                 "weight_decay": 0.0064118189664166105,
+    #                 "warmup_length": 0.3887212742576327,},
+    #             2.5:{        
+    #                 "dropout": 0.10024130445864891,
+    #                 "learning_rate": 0.008982436003737935,
+    #                 "weight_decay": 0.009014138765916972,
+    #                 "warmup_length": 0.3633101457273268,}
+
+    #     }
+    # for score in [0.5,1.0,1.5,2.0,2.5]:
+    #     main(score_config[score],score=score)
+    main(score=0.5)

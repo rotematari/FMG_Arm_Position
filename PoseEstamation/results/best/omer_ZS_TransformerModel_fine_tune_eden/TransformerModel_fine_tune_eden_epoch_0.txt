@@ -1,0 +1,11 @@
+RMSE Avg Loss: 0.67073
+Avg Iter Time: 0.00735
+Avg Euclidean Wrist Error: 0.13255999982357025
+Euclidean Wrist STD: 0.07299000024795532
+Avg Euclidean Elbow Error: 0.06852000206708908
+Euclidean Elbow STD: 0.03787999972701073
+Max Euclidean End Effector Error: 0.44012999534606934
+Avg Location Error: [0.03159866 0.03172901 0.04197183 0.05304214 0.07697374 0.07345868]
+R² Score: 0.21946999430656433
+
+{'model': 'TransformerModel_fine_tune_eden', 'pre_trained_model_path': 'results/best/Transformer_normal/TransformerModel_epoch_8_date_25_12_09_36.pt', 'enabled': False, 'learning_rate': 1e-05, 'weight_decay': 0.001, 'num_epochs': 15, 'batch_size': 32, 'criterion': 'MSELoss', 'model_save_path': 'fine_tuned_model.pth', 'train_data_path': 'data/multi_user/omer/fine_tune', 'test_data_path': 'data/multi_user/omer/test', 'layers_to_train': ['wrist_fc.2', 'wrist_fc.5', 'wrist_fc_sum', 'elbow_fc.2', 'elbow_fc.5', 'elbow_fc_sum'], 'experiment_name': 'omer_ZS_'}

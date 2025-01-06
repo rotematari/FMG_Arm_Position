@@ -1,0 +1,18 @@
+{
+    "config": {
+        "name": "TransformerModel",
+        "dropout": 0.186,
+        "learning_rate": 0.004,
+        "weight_decay": 0.0002,
+        "warmup_length": 0.389,
+        "batch_size": 32,
+        "sequence_length": 128,
+        "epochs": 15
+    },
+    "loss": 0.4425555398641539,
+    "wrist_error": 0.12702001631259918,
+    "wrist_std_error": 0.06762242317199707,
+    "elbow_error": 0.0646967738866806,
+    "elbow_std_error": 0.03657516464591026,
+    "best_epoch": 3
+}
